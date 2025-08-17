@@ -1,0 +1,32 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  DB_CONN: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB?sslmode=disable
+
+tasks:
+  sqlgen:
+    desc: Generate sqlc pkgs
+    cmds:
+      # sqlc does not suppoort yml anchors
+      - yq eval 'explode(.) | del(.common_overrides)' sqlc.yaml > .sqlc.inline.yaml
+      - sqlc generate -f .sqlc.inline.yaml
+
+  migrate:
+    desc: Applies DB schema from sql
+    deps:
+      - task: sqlgen
+        silent: true
+    cmds:
+      - atlas schema apply --env default --url "{{.DB_CONN}}"
+
+  up:
+    desc: Start local infra
+    cmds:
+      - docker compose up -d
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test -p 1 ./... {{.CLI_ARGS}}

@@ -1,0 +1,40 @@
+version: "2"
+
+common_overrides: &common_overrides
+  sql_package: "pgx/v5"
+  emit_empty_slices: true
+  emit_pointers_for_null_types: true
+  overrides:
+    - db_type: "uuid"
+      nullable: false
+      go_type:
+        import: "github.com/google/uuid"
+        type: "UUID"
+    - db_type: "uuid"
+      nullable: true
+      go_type:
+        import: "github.com/google/uuid"
+        type: "UUID"
+        pointer: true
+    - db_type: "timestamptz"
+      nullable: false
+      go_type:
+        import: "time"
+        type: "Time"
+    - db_type: "timestamptz"
+      nullable: true
+      go_type:
+        import: "time"
+        type: "Time"
+        pointer: true
+
+sql:
+  - name: "user"
+    engine: "postgresql"
+    schema: "./user/schema.sql"
+    queries: "./user/queries.sql"
+    gen:
+      go:
+        package: "userdb"
+        out: "./user/db"
+        <<: *common_overrides
