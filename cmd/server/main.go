@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"gotemplate/common"
-	"gotemplate/config"
-	"gotemplate/middleware"
-	"gotemplate/user"
+	"gotemplate/internal/common"
+	"gotemplate/internal/config"
+	"gotemplate/internal/middleware"
+	"gotemplate/internal/user"
 	"net"
 	"net/http"
 

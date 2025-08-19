@@ -1,8 +1,8 @@
 package user
 
 import (
-	"gotemplate/common"
-	userdb "gotemplate/user/db"
+	"gotemplate/internal/common"
+	userdb "gotemplate/internal/user/db"
 
 	"go.uber.org/fx"
 )

@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"errors"
-	"gotemplate/common"
+	"gotemplate/internal/common"
 	"log/slog"
 
 	"github.com/danielgtaylor/huma/v2"

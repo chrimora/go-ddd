@@ -19,6 +19,8 @@ And most importantly, a solid pattern to follow.
 It's pretty simple, a data model, routes, services, and schema & queries (repository).  
 Following a domain first approach.
 
+Keep service methods transactional!
+
 Auth is excluded because it is often dictated by business requirements.
 
 Data is updated using the read, modify, and update pattern, with optimistic locking (updated_at versioning).  
@@ -33,12 +35,14 @@ Extension (for growing projects):
   - Handler
 
 TODO; testing framework
+TODO; async worker
 
 ## Requirements
 
 - Go
 - Taskfile
 - sqlc
+- Atlas
 - Docker compose
 - yq
 

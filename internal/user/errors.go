@@ -2,7 +2,7 @@ package user
 
 import (
 	"fmt"
-	"gotemplate/common"
+	"gotemplate/internal/common"
 
 	"github.com/google/uuid"
 )

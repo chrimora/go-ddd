@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	userdb "gotemplate/user/db"
+	userdb "gotemplate/internal/user/db"
 	"log/slog"
 
 	"github.com/google/uuid"
