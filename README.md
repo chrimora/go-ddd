@@ -27,7 +27,6 @@ Data is updated using the read, modify, and update pattern, with optimistic lock
 This is to help keep the code simple.
 
 Extension (for growing projects):
-- Wrap the sqlc generated pkg in a repository layer to separate db concerns
 - If facing frequent race conditions, split the update methods (UpdateUserX, UpdateUserY, ...)
 - As routes etc. grow, split the methods into separate files (i.e. in user/routes/) each of these files can have their own:
   - Struct for dependencies

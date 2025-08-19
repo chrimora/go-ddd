@@ -13,9 +13,10 @@ var Module = fx.Module(
 		common.AsRouteCollection(NewUserRoutes),
 		NewUserService,
 		NewUserRepository,
+		NewUserSql,
 	),
 )
 
-func NewUserRepository(db common.DBTX) UserRepositoryI {
+func NewUserSql(db common.DBTX) UserSqlI {
 	return userdb.New(db)
 }
