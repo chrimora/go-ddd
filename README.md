@@ -33,8 +33,10 @@ Extension (for growing projects):
   - Input & Output
   - Handler
 
+TODO; split repos into infra
+TODO; split routes into interfaces/http
+TODO; split common into things/common
 TODO; testing framework
-TODO; async worker
 
 ## Requirements
 

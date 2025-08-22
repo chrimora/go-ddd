@@ -4,29 +4,34 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	userdb "gotemplate/internal/user/db"
+	"gotemplate/internal/domain/common"
+	userdb "gotemplate/internal/domain/user/db"
 	"log/slog"
 
 	"github.com/google/uuid"
 )
 
-type UserSqlI interface {
-	GetUser(context.Context, uuid.UUID) (userdb.User, error)
-	CreateUser(context.Context, string) (uuid.UUID, error)
-	UpdateUser(context.Context, userdb.UpdateUserParams) error
-}
-
 type UserRepository struct {
 	log     *slog.Logger
-	userSql UserSqlI
-	// eventsSql
+	userSql *userdb.Queries
 }
 
-func NewUserRepository(log *slog.Logger, userSql UserSqlI) UserRepositoryI {
+func NewUserRepository(log *slog.Logger, userSql *userdb.Queries) UserRepositoryI {
 	return &UserRepository{
 		log:     log,
 		userSql: userSql,
-		// eventsSql: eventsSql,
+	}
+}
+
+func (e *UserRepository) WithTx(tx *common.Tx) UserRepositoryI {
+	return NewUserRepository(e.log, e.userSql.WithTx(tx.Tx))
+}
+
+func fromDB(user userdb.User) *User {
+	return &User{
+		ID:        user.ID,
+		UpdatedAt: user.UpdatedAt,
+		Name:      user.Name,
 	}
 }
 
@@ -43,16 +48,13 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 	return fromDB(user), nil
 }
 
-func (u *UserRepository) Create(ctx context.Context, user *User) (uuid.UUID, error) {
-	id, err := u.userSql.CreateUser(ctx, user.Name)
-	if err != nil {
-		return id, err
-	}
-	return id, nil
+func (u *UserRepository) Create(ctx context.Context, user *User) error {
+	_, err := u.userSql.CreateUser(ctx, userdb.CreateUserParams{ID: user.ID, Name: user.Name})
+	return err
 }
 
 func (u *UserRepository) Update(ctx context.Context, user *User) error {
-	err := u.userSql.UpdateUser(
+	_, err := u.userSql.UpdateUser(
 		ctx,
 		userdb.UpdateUserParams{ID: user.ID, UpdatedAt: user.UpdatedAt, Name: user.Name},
 	)

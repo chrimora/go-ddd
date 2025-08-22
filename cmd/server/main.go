@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"gotemplate/internal/common"
 	"gotemplate/internal/config"
+	"gotemplate/internal/domain"
 	"gotemplate/internal/middleware"
-	"gotemplate/internal/user"
+	"gotemplate/internal/outbox"
 	"net"
 	"net/http"
 
@@ -59,7 +60,8 @@ func main() {
 		),
 		config.Module,
 		common.Module,
-		user.Module,
+		outbox.Module,
+		domain.Module,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
 }

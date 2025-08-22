@@ -13,13 +13,18 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (name)
-VALUES ($1)
+INSERT INTO users (id, name)
+VALUES ($1, $2)
 RETURNING id
 `
 
-func (q *Queries) CreateUser(ctx context.Context, name string) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createUser, name)
+type CreateUserParams struct {
+	ID   uuid.UUID
+	Name string
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.ID, arg.Name)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -36,7 +41,7 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 	return i, err
 }
 
-const updateUser = `-- name: UpdateUser :exec
+const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET name = $3, updated_at = now()
 WHERE id = $1
@@ -50,7 +55,9 @@ type UpdateUserParams struct {
 	Name      string
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.db.Exec(ctx, updateUser, arg.ID, arg.UpdatedAt, arg.Name)
-	return err
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, updateUser, arg.ID, arg.UpdatedAt, arg.Name)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }

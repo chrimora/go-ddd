@@ -2,26 +2,30 @@ package user
 
 import (
 	"context"
+	"gotemplate/internal/domain/common"
 	"log/slog"
 
 	"github.com/google/uuid"
 )
 
 type UserRepositoryI interface {
+	WithTx(*common.Tx) UserRepositoryI
 	Get(context.Context, uuid.UUID) (*User, error)
-	Create(context.Context, *User) (uuid.UUID, error)
+	Create(context.Context, *User) error
 	Update(context.Context, *User) error
 }
 
 type UserService struct {
-	log      *slog.Logger
-	userRepo UserRepositoryI
+	log       *slog.Logger
+	txFactory common.TxFactory
+	userRepo  UserRepositoryI
 }
 
-func NewUserService(log *slog.Logger, userRepo UserRepositoryI) UserServiceI {
+func NewUserService(log *slog.Logger, txFactory common.TxFactory, userRepo UserRepositoryI) UserServiceI {
 	return &UserService{
-		log:      log,
-		userRepo: userRepo,
+		log:       log,
+		txFactory: txFactory,
+		userRepo:  userRepo,
 	}
 }
 
@@ -30,8 +34,22 @@ func (u *UserService) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 }
 
 func (u *UserService) Create(ctx context.Context, req UserCreatePayload) (uuid.UUID, error) {
-	user := &User{Name: req.Name}
-	return u.userRepo.Create(ctx, user)
+	user := NewUser(req.Name)
+
+	tx, err := u.txFactory(ctx)
+	if err != nil {
+		return user.ID, err
+	}
+	defer tx.Rollback()
+
+	err = u.userRepo.WithTx(tx).Create(ctx, user)
+	if err != nil {
+		return user.ID, err
+	}
+
+	tx.TrackEvents(user)
+	err = tx.Commit()
+	return user.ID, nil
 }
 
 func (u *UserService) Update(ctx context.Context, id uuid.UUID, req UserUpdatePayload) error {
@@ -40,7 +58,7 @@ func (u *UserService) Update(ctx context.Context, id uuid.UUID, req UserUpdatePa
 		return err
 	}
 
-	user.Name = req.Name
+	user.Update(req.Name)
 
 	u.log.InfoContext(ctx, "Updating", "user", user)
 	return u.userRepo.Update(ctx, user)

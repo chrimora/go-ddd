@@ -12,7 +12,9 @@ import (
 )
 
 // Copy the sqlc interface
+// Add Begin so we can create tx
 type DBTX interface {
+	Begin(context.Context) (pgx.Tx, error)
 	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
 	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
 	QueryRow(context.Context, string, ...interface{}) pgx.Row
@@ -46,4 +48,12 @@ func NewDBPool(lc fx.Lifecycle, cfg *config.DBConfig, ctx context.Context) DBTX 
 		},
 	})
 	return pool
+}
+
+type TxFactory func(context.Context) (pgx.Tx, error)
+
+func NewTxFactory(db DBTX) TxFactory {
+	return func(ctx context.Context) (pgx.Tx, error) {
+		return db.Begin(ctx)
+	}
 }

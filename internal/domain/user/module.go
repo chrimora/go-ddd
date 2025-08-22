@@ -2,7 +2,7 @@ package user
 
 import (
 	"gotemplate/internal/common"
-	userdb "gotemplate/internal/user/db"
+	userdb "gotemplate/internal/domain/user/db"
 
 	"go.uber.org/fx"
 )
@@ -13,10 +13,10 @@ var Module = fx.Module(
 		common.AsRouteCollection(NewUserRoutes),
 		NewUserService,
 		NewUserRepository,
-		NewUserSql,
+		NewSql,
 	),
 )
 
-func NewUserSql(db common.DBTX) UserSqlI {
+func NewSql(db common.DBTX) *userdb.Queries {
 	return userdb.New(db)
 }

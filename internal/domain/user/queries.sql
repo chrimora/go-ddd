@@ -2,11 +2,11 @@
 SELECT * FROM users WHERE id = $1;
 
 -- name: CreateUser :one
-INSERT INTO users (name)
-VALUES ($1)
+INSERT INTO users (id, name)
+VALUES ($1, $2)
 RETURNING id;
 
--- name: UpdateUser :exec
+-- name: UpdateUser :one
 UPDATE users
 SET name = $3, updated_at = now()
 WHERE id = $1

@@ -29,12 +29,21 @@ common_overrides: &common_overrides
         pointer: true
 
 sql:
+  - name: "outbox"
+    engine: "postgresql"
+    schema: "./internal/outbox/schema.sql"
+    queries: "./internal/outbox/queries.sql"
+    gen:
+      go:
+        package: "outboxdb"
+        out: "./internal/outbox/db"
+        <<: *common_overrides
   - name: "user"
     engine: "postgresql"
-    schema: "./user/schema.sql"
-    queries: "./user/queries.sql"
+    schema: "./internal/domain/user/schema.sql"
+    queries: "./internal/domain/user/queries.sql"
     gen:
       go:
         package: "userdb"
-        out: "./user/db"
+        out: "./internal/domain/user/db"
         <<: *common_overrides
