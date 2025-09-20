@@ -2,7 +2,7 @@ package outbox
 
 import (
 	"gotemplate/internal/common"
-	outboxdb "gotemplate/internal/outbox/db"
+	outboxdb "gotemplate/internal/infrastructure/sql/codegen/outbox"
 
 	"go.uber.org/fx"
 )

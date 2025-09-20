@@ -33,9 +33,8 @@ Extension (for growing projects):
   - Input & Output
   - Handler
 
-TODO; split repos into infra/db
-TODO; split common
 TODO; NewX return X provide AS Y
+TODO; split common
 TODO; testing framework
 
 ## Requirements
@@ -54,4 +53,16 @@ TODO; testing framework
 - `task worker`
 
 Checkout http://localhost:8080/docs
+
+## SQL
+
+Using SQLC and Atlas to manage sql + migrations.
+
+When creating a new table, add your sql schema into infrastructure/sql, then update:
+- sqlc.yaml
+- atlas.hcl
+
+Then run:
+- `task sqlgen`
+- `task migrate`
 

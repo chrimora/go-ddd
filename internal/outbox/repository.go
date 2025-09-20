@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"gotemplate/internal/common"
 	domain "gotemplate/internal/domain/common"
-	outboxdb "gotemplate/internal/outbox/db"
+	outboxdb "gotemplate/internal/infrastructure/sql/codegen/outbox"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"

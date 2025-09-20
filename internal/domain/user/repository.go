@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"gotemplate/internal/domain/common"
-	userdb "gotemplate/internal/domain/user/db"
+	userdb "gotemplate/internal/infrastructure/sql/codegen/user"
 	"log/slog"
 
 	"github.com/google/uuid"

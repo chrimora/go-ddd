@@ -2,7 +2,7 @@ package user
 
 import (
 	"gotemplate/internal/common"
-	userdb "gotemplate/internal/domain/user/db"
+	userdb "gotemplate/internal/infrastructure/sql/codegen/user"
 
 	"go.uber.org/fx"
 )
