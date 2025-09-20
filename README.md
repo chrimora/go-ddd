@@ -34,8 +34,8 @@ Extension (for growing projects):
   - Handler
 
 TODO; split repos into infra/db
-TODO; split routes into interfaces/rest
 TODO; split common
+TODO; NewX return X provide AS Y
 TODO; testing framework
 
 ## Requirements

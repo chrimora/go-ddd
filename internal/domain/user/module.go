@@ -10,7 +10,6 @@ import (
 var Module = fx.Module(
 	"user",
 	fx.Provide(
-		common.AsRouteCollection(NewUserRoutes),
 		NewUserService,
 		NewUserRepository,
 		NewSql,

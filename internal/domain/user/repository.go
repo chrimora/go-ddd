@@ -25,14 +25,6 @@ func NewUserRepository(log *slog.Logger, txFactory common.TxFactory, userSql *us
 	}
 }
 
-func fromDB(user userdb.User) *User {
-	return &User{
-		AggregateRoot: common.AggregateRoot{ID: user.ID},
-		UpdatedAt:     user.UpdatedAt,
-		Name:          user.Name,
-	}
-}
-
 func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 	user, err := u.userSql.GetUser(ctx, id)
 	if err != nil {
@@ -43,7 +35,11 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 			return nil, err
 		}
 	}
-	return fromDB(user), nil
+	return &User{
+		AggregateRoot: common.AggregateRoot{ID: user.ID},
+		UpdatedAt:     user.UpdatedAt,
+		Name:          user.Name,
+	}, nil
 }
 
 func (u *UserRepository) Create(ctx context.Context, user *User) error {

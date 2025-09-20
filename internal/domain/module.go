@@ -14,3 +14,8 @@ var Module = fx.Module(
 	),
 	user.Module,
 )
+
+type (
+	User         = user.User
+	UserServiceI = user.UserServiceI
+)

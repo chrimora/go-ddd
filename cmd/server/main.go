@@ -7,6 +7,7 @@ import (
 	"gotemplate/internal/config"
 	"gotemplate/internal/domain"
 	"gotemplate/internal/infrastructure/middleware"
+	"gotemplate/internal/interfaces/rest"
 	"gotemplate/internal/outbox"
 	"net"
 	"net/http"
@@ -20,7 +21,7 @@ func NewServeMux() *http.ServeMux {
 	return http.NewServeMux()
 }
 
-func NewApi(routeCollection []common.RouteCollection, mux *http.ServeMux) *huma.API {
+func NewApi(routeCollection []rest.RouteCollection, mux *http.ServeMux) *huma.API {
 	api := humago.New(mux, huma.DefaultConfig("Go Template", "1.0"))
 	api.UseMiddleware(middleware.RequestIdMiddleware)
 	for _, routes := range routeCollection {
@@ -64,6 +65,7 @@ func main() {
 		common.Module,
 		outbox.Module,
 		domain.Module,
+		rest.Module,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
 }
