@@ -17,7 +17,7 @@ type UserRepository struct {
 	userSql   *userdb.Queries
 }
 
-func NewUserRepository(log *slog.Logger, txFactory common.TxFactory, userSql *userdb.Queries) UserRepositoryI {
+func NewUserRepository(log *slog.Logger, txFactory common.TxFactory, userSql *userdb.Queries) *UserRepository {
 	return &UserRepository{
 		log:       log,
 		txFactory: txFactory,

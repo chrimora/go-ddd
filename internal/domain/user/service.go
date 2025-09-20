@@ -27,7 +27,7 @@ type UserService struct {
 	userRepo UserRepositoryI
 }
 
-func NewUserService(log *slog.Logger, userRepo UserRepositoryI) UserServiceI {
+func NewUserService(log *slog.Logger, userRepo UserRepositoryI) *UserService {
 	return &UserService{
 		log:      log,
 		userRepo: userRepo,

@@ -3,8 +3,8 @@ package rest
 import (
 	"context"
 	"errors"
-	"gotemplate/internal/common"
 	"gotemplate/internal/domain"
+	"gotemplate/internal/domain/common"
 	"log/slog"
 
 	"github.com/danielgtaylor/huma/v2"

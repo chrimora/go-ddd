@@ -11,6 +11,7 @@ var Module = fx.Module(
 	"domain",
 	fx.Provide(
 		common.NewTxFactory,
+		common.NewOutboxRepository,
 	),
 	user.Module,
 )

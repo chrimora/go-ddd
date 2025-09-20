@@ -1,21 +1,13 @@
 package user
 
 import (
-	"gotemplate/internal/common"
-	userdb "gotemplate/internal/infrastructure/sql/codegen/user"
-
 	"go.uber.org/fx"
 )
 
 var Module = fx.Module(
 	"user",
 	fx.Provide(
-		NewUserService,
-		NewUserRepository,
-		NewSql,
+		fx.Annotate(NewUserService, fx.As(new(UserServiceI))),
+		fx.Annotate(NewUserRepository, fx.As(new(UserRepositoryI))),
 	),
 )
-
-func NewSql(db common.DBTX) *userdb.Queries {
-	return userdb.New(db)
-}

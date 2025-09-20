@@ -1,36 +1,40 @@
-package outbox
+package common
 
 import (
 	"context"
 	"encoding/json"
 	"gotemplate/internal/common"
-	domain "gotemplate/internal/domain/common"
 	outboxdb "gotemplate/internal/infrastructure/sql/codegen/outbox"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 )
 
+type OutboxRepositoryI interface {
+	WithTx(pgx.Tx) OutboxRepositoryI
+	Create(context.Context, common.ServiceContext, DomainEventI) error
+}
+
 type OutboxRepository struct {
 	log       *slog.Logger
 	outboxSql *outboxdb.Queries
 }
 
-func NewOutboxRepository(log *slog.Logger, outboxSql *outboxdb.Queries) domain.OutboxRepositoryI {
+func NewOutboxRepository(log *slog.Logger, outboxSql *outboxdb.Queries) OutboxRepositoryI {
 	return &OutboxRepository{
 		log:       log,
 		outboxSql: outboxSql,
 	}
 }
 
-func (e *OutboxRepository) WithTx(tx pgx.Tx) domain.OutboxRepositoryI {
+func (e *OutboxRepository) WithTx(tx pgx.Tx) OutboxRepositoryI {
 	return NewOutboxRepository(e.log, e.outboxSql.WithTx(tx))
 }
 
 func (e *OutboxRepository) Create(
 	ctx context.Context,
 	eventContext common.ServiceContext,
-	event domain.DomainEventI,
+	event DomainEventI,
 ) error {
 	_eventContext, err := json.Marshal(eventContext)
 	if err != nil {

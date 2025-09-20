@@ -33,9 +33,9 @@ Extension (for growing projects):
   - Input & Output
   - Handler
 
-TODO; NewX return X provide AS Y
-TODO; split common
+TODO; split service into commands/queries
 TODO; testing framework
+TODO; worker
 
 ## Requirements
 

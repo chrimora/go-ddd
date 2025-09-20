@@ -7,8 +7,8 @@ import (
 	"gotemplate/internal/config"
 	"gotemplate/internal/domain"
 	"gotemplate/internal/infrastructure/middleware"
+	"gotemplate/internal/infrastructure/sql"
 	"gotemplate/internal/interfaces/rest"
-	"gotemplate/internal/outbox"
 	"net"
 	"net/http"
 
@@ -54,6 +54,7 @@ func main() {
 	fx.New(
 		fx.Supply(service),
 		fx.Provide(
+			common.NewLogger,
 			NewHTTPServer,
 			NewServeMux,
 			fx.Annotate(
@@ -62,9 +63,8 @@ func main() {
 			),
 		),
 		config.Module,
-		common.Module,
-		outbox.Module,
 		domain.Module,
+		sql.Module,
 		rest.Module,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
