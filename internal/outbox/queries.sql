@@ -1,15 +1,15 @@
 -- name: GetNextEvent :one
-SELECT *
+SELECT DISTINCT ON (aggregate_id) *
 FROM event_outbox
 WHERE processed_at IS NULL
 AND retries < 3
-ORDER BY created_at
+ORDER BY aggregate_id, created_at
 LIMIT 1
 FOR UPDATE SKIP LOCKED;
 
 -- name: CreateEvent :exec
-INSERT INTO event_outbox (event_type, payload)
-VALUES ($1, $2);
+INSERT INTO event_outbox (aggregate_id, event_context, event_type, payload)
+VALUES ($1, $2, $3, $4);
 
 -- name: UpdateEvent :one
 UPDATE event_outbox

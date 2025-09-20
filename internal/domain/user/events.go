@@ -1,17 +1,21 @@
 package user
 
 import (
-	"gotemplate/internal/outbox"
+	"gotemplate/internal/domain/common"
 
 	"github.com/google/uuid"
 )
 
-const UserCreated outbox.EventType = "userCreated"
+const UserCreated common.EventType = "userCreated"
 
 type UserCreatedEvent struct {
-	ID uuid.UUID
+	common.DomainEventRoot
 }
 
-func (u UserCreatedEvent) Type() outbox.EventType {
-	return UserCreated
+func NewUserCreatedEvent(aggregateId uuid.UUID) UserCreatedEvent {
+	return UserCreatedEvent{
+		DomainEventRoot: common.DomainEventRoot{
+			EventType: UserCreated, AggregateId: aggregateId,
+		},
+	}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 var Module = fx.Module(
-	"user",
+	"outbox",
 	fx.Provide(
 		NewOutboxRepository,
 		NewSql,

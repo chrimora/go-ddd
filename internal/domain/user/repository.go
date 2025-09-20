@@ -12,26 +12,24 @@ import (
 )
 
 type UserRepository struct {
-	log     *slog.Logger
-	userSql *userdb.Queries
+	log       *slog.Logger
+	txFactory common.TxFactory
+	userSql   *userdb.Queries
 }
 
-func NewUserRepository(log *slog.Logger, userSql *userdb.Queries) UserRepositoryI {
+func NewUserRepository(log *slog.Logger, txFactory common.TxFactory, userSql *userdb.Queries) UserRepositoryI {
 	return &UserRepository{
-		log:     log,
-		userSql: userSql,
+		log:       log,
+		txFactory: txFactory,
+		userSql:   userSql,
 	}
-}
-
-func (e *UserRepository) WithTx(tx *common.Tx) UserRepositoryI {
-	return NewUserRepository(e.log, e.userSql.WithTx(tx.Tx))
 }
 
 func fromDB(user userdb.User) *User {
 	return &User{
-		ID:        user.ID,
-		UpdatedAt: user.UpdatedAt,
-		Name:      user.Name,
+		AggregateRoot: common.AggregateRoot{ID: user.ID},
+		UpdatedAt:     user.UpdatedAt,
+		Name:          user.Name,
 	}
 }
 
@@ -49,7 +47,20 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 }
 
 func (u *UserRepository) Create(ctx context.Context, user *User) error {
-	_, err := u.userSql.CreateUser(ctx, userdb.CreateUserParams{ID: user.ID, Name: user.Name})
+	tx, err := u.txFactory(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = u.userSql.WithTx(tx.Tx).CreateUser(ctx, userdb.CreateUserParams{ID: user.ID, Name: user.Name})
+
+	tx.TrackEvents(user)
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 

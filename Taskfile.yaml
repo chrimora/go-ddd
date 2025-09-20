@@ -6,6 +6,21 @@ vars:
   DB_CONN: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:5432/$POSTGRES_DB?sslmode=disable
 
 tasks:
+  infra:
+    desc: Start local infra
+    cmds:
+      - docker compose up -d
+
+  server:
+    desc: Run the server locally
+    cmds:
+      - go run cmd/server/main.go
+
+  worker:
+    desc: Run the worker locally
+    cmds:
+      - go run cmd/worker/main.go
+
   sqlgen:
     desc: Generate sqlc pkgs
     cmds:
@@ -20,11 +35,6 @@ tasks:
         silent: true
     cmds:
       - atlas schema apply --env default --url "{{.DB_CONN}}"
-
-  up:
-    desc: Start local infra
-    cmds:
-      - docker compose up -d
 
   test:
     desc: Run all tests

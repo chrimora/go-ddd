@@ -3,19 +3,14 @@ package common
 import (
 	"context"
 	"gotemplate/internal/common"
-	"gotemplate/internal/outbox"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 )
 
-type AggregateRootI interface {
-	PullEvents() []outbox.DomainEventI
-}
-
 type Tx struct {
 	log              *slog.Logger
-	outboxRepository outbox.OutboxRepositoryI
+	outboxRepository OutboxRepositoryI
 
 	Tx         pgx.Tx
 	ctx        context.Context
@@ -31,17 +26,17 @@ func (tx *Tx) TrackEvents(aggregate AggregateRootI) {
 }
 
 func (tx *Tx) Commit() error {
-	var events []outbox.DomainEventI
+	var events []DomainEventI
 	for _, agg := range tx.aggregates {
 		events = append(events, agg.PullEvents()...)
 	}
 
 	for _, event := range events {
-		payload, err := outbox.CreateEventPayload(tx.ctx, event)
+		serviceContext, err := common.NewServiceCtx(tx.ctx)
 		if err != nil {
 			return err
 		}
-		err = tx.outboxRepository.WithTx(tx.Tx).Create(tx.ctx, event.Type(), payload)
+		err = tx.outboxRepository.WithTx(tx.Tx).Create(tx.ctx, serviceContext, event)
 		if err != nil {
 			return err
 		}
@@ -52,7 +47,7 @@ func (tx *Tx) Commit() error {
 
 type TxFactory func(context.Context) (*Tx, error)
 
-func NewTxFactory(db common.DBTX, log *slog.Logger, outboxRepository outbox.OutboxRepositoryI) TxFactory {
+func NewTxFactory(db common.DBTX, log *slog.Logger, outboxRepository OutboxRepositoryI) TxFactory {
 	return func(ctx context.Context) (*Tx, error) {
 		tx, err := db.Begin(ctx)
 		return &Tx{

@@ -8,29 +8,38 @@ package outboxdb
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const createEvent = `-- name: CreateEvent :exec
-INSERT INTO event_outbox (event_type, payload)
-VALUES ($1, $2)
+INSERT INTO event_outbox (aggregate_id, event_context, event_type, payload)
+VALUES ($1, $2, $3, $4)
 `
 
 type CreateEventParams struct {
-	EventType string
-	Payload   []byte
+	AggregateID  uuid.UUID
+	EventContext []byte
+	EventType    string
+	Payload      []byte
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) error {
-	_, err := q.db.Exec(ctx, createEvent, arg.EventType, arg.Payload)
+	_, err := q.db.Exec(ctx, createEvent,
+		arg.AggregateID,
+		arg.EventContext,
+		arg.EventType,
+		arg.Payload,
+	)
 	return err
 }
 
 const getNextEvent = `-- name: GetNextEvent :one
-SELECT id, event_type, payload, created_at, updated_at, retries, processed_at
+SELECT DISTINCT ON (aggregate_id) id, aggregate_id, event_context, event_type, payload, created_at, updated_at, retries, processed_at
 FROM event_outbox
 WHERE processed_at IS NULL
 AND retries < 3
-ORDER BY created_at
+ORDER BY aggregate_id, created_at
 LIMIT 1
 FOR UPDATE SKIP LOCKED
 `
@@ -40,6 +49,8 @@ func (q *Queries) GetNextEvent(ctx context.Context) (EventOutbox, error) {
 	var i EventOutbox
 	err := row.Scan(
 		&i.ID,
+		&i.AggregateID,
+		&i.EventContext,
 		&i.EventType,
 		&i.Payload,
 		&i.CreatedAt,

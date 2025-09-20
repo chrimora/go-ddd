@@ -2,32 +2,32 @@ package common
 
 import (
 	"context"
+	"gotemplate/internal/config"
 	"log/slog"
 	"os"
 )
 
-const (
-	RequestIdKey = "requestId"
-	UserIdKey    = "userId"
-)
-
 type contextHandler struct {
 	slog.Handler
+	service config.ServiceConfig
 }
 
 func (h *contextHandler) Handle(ctx context.Context, r slog.Record) error {
-	if requestId, ok := ctx.Value(RequestIdKey).(string); ok {
-		r.AddAttrs(slog.String(RequestIdKey, requestId))
+	r.AddAttrs(slog.String("service", h.service.Name))
+
+	serviceCtx, err := NewServiceCtx(ctx)
+	if err != nil {
+		return err
 	}
-	if userId, ok := ctx.Value(UserIdKey).(string); ok {
-		r.AddAttrs(slog.String(UserIdKey, userId))
-	}
+
+	r.AddAttrs(slog.String(RequestIdKey, serviceCtx.RequestId))
+	// r.AddAttrs(slog.String(UserIdKey, serviceCtx.UserId))
 
 	return h.Handler.Handle(ctx, r)
 }
 
-func NewLogger() *slog.Logger {
+func NewLogger(service config.ServiceConfig) *slog.Logger {
 	base := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
-	handler := &contextHandler{Handler: base}
+	handler := &contextHandler{Handler: base, service: service}
 	return slog.New(handler)
 }

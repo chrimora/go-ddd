@@ -9,17 +9,16 @@ import (
 
 type User struct {
 	common.AggregateRoot
-	ID        uuid.UUID
 	UpdatedAt time.Time
 	Name      string
 }
 
 func NewUser(name string) *User {
 	user := &User{
-		ID:   uuid.New(),
-		Name: name,
+		AggregateRoot: common.AggregateRoot{ID: uuid.New()},
+		Name:          name,
 	}
-	user.AddEvent(UserCreatedEvent{ID: user.ID})
+	user.AddEvent(NewUserCreatedEvent(user.ID))
 	return user
 }
 

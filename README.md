@@ -33,9 +33,9 @@ Extension (for growing projects):
   - Input & Output
   - Handler
 
-TODO; split repos into infra
-TODO; split routes into interfaces/http
-TODO; split common into things/common
+TODO; split repos into infra/db
+TODO; split routes into interfaces/rest
+TODO; split common
 TODO; testing framework
 
 ## Requirements
@@ -44,13 +44,14 @@ TODO; testing framework
 - Taskfile
 - sqlc
 - Atlas
-- Docker compose
+- docker compose
 - yq
 
 ## Quick start
 
-- `task up`
-- `go run main.go`
+- `task infra`
+- `task server`
+- `task worker`
 
 Checkout http://localhost:8080/docs
 

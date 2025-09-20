@@ -6,7 +6,7 @@ import (
 	"gotemplate/internal/common"
 	"gotemplate/internal/config"
 	"gotemplate/internal/domain"
-	"gotemplate/internal/middleware"
+	"gotemplate/internal/infrastructure/middleware"
 	"gotemplate/internal/outbox"
 	"net"
 	"net/http"
@@ -49,7 +49,9 @@ func NewHTTPServer(lc fx.Lifecycle, mux *http.ServeMux) *http.Server {
 }
 
 func main() {
+	service := config.ServiceConfig{Name: "server"}
 	fx.New(
+		fx.Supply(service),
 		fx.Provide(
 			NewHTTPServer,
 			NewServeMux,

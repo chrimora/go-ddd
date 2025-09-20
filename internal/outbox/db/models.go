@@ -6,14 +6,18 @@ package outboxdb
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type EventOutbox struct {
-	ID          int32
-	EventType   string
-	Payload     []byte
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Retries     int32
-	ProcessedAt *time.Time
+	ID           int32
+	AggregateID  uuid.UUID
+	EventContext []byte
+	EventType    string
+	Payload      []byte
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Retries      int32
+	ProcessedAt  *time.Time
 }
