@@ -13,50 +13,71 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, name)
-VALUES ($1, $2)
+INSERT INTO users (id, version, created_at, updated_at, name)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 `
 
 type CreateUserParams struct {
-	ID   uuid.UUID
-	Name string
+	ID        uuid.UUID
+	Version   int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.ID, arg.Name)
+	row := q.db.QueryRow(ctx, createUser,
+		arg.ID,
+		arg.Version,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.Name,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, updated_at, name FROM users WHERE id = $1
+SELECT id, version, created_at, updated_at, name FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUser, id)
 	var i User
-	err := row.Scan(&i.ID, &i.UpdatedAt, &i.Name)
+	err := row.Scan(
+		&i.ID,
+		&i.Version,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+	)
 	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET name = $3, updated_at = now()
+SET version = version + 1, updated_at = $3, name = $4 
 WHERE id = $1
-AND updated_at = $2
+AND version = $2
 RETURNING id
 `
 
 type UpdateUserParams struct {
 	ID        uuid.UUID
+	Version   int32
 	UpdatedAt time.Time
 	Name      string
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, updateUser, arg.ID, arg.UpdatedAt, arg.Name)
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.ID,
+		arg.Version,
+		arg.UpdatedAt,
+		arg.Name,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err

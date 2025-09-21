@@ -36,9 +36,10 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 		}
 	}
 	return &User{
-		AggregateRoot: common.AggregateRoot{ID: user.ID},
-		UpdatedAt:     user.UpdatedAt,
-		Name:          user.Name,
+		AggregateRoot: common.NewAggregateRootFromFields(
+			user.ID, int(user.Version), user.CreatedAt, user.UpdatedAt,
+		),
+		Name: user.Name,
 	}, nil
 }
 
@@ -49,7 +50,16 @@ func (u *UserRepository) Create(ctx context.Context, user *User) error {
 	}
 	defer tx.Rollback()
 
-	_, err = u.userSql.WithTx(tx.Tx).CreateUser(ctx, userdb.CreateUserParams{ID: user.ID, Name: user.Name})
+	_, err = u.userSql.WithTx(tx.Tx).CreateUser(
+		ctx,
+		userdb.CreateUserParams{
+			ID:        user.ID,
+			Version:   int32(user.GetVersion()),
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Name:      user.Name,
+		},
+	)
 
 	tx.TrackEvents(user)
 	err = tx.Commit()
@@ -63,7 +73,12 @@ func (u *UserRepository) Create(ctx context.Context, user *User) error {
 func (u *UserRepository) Update(ctx context.Context, user *User) error {
 	_, err := u.userSql.UpdateUser(
 		ctx,
-		userdb.UpdateUserParams{ID: user.ID, UpdatedAt: user.UpdatedAt, Name: user.Name},
+		userdb.UpdateUserParams{
+			ID:        user.ID,
+			Version:   int32(user.GetVersion()),
+			UpdatedAt: user.UpdatedAt,
+			Name:      user.Name,
+		},
 	)
 	if err != nil {
 		switch {

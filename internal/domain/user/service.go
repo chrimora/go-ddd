@@ -35,12 +35,13 @@ func NewUserService(log *slog.Logger, userRepo UserRepositoryI) *UserService {
 }
 
 func (u *UserService) Get(ctx context.Context, id uuid.UUID) (*User, error) {
-	return u.userRepo.Get(ctx, id)
+	user, err := u.userRepo.Get(ctx, id)
+	u.log.InfoContext(ctx, "Got", "user", user)
+	return user, err
 }
 
 func (u *UserService) Create(ctx context.Context, name string) (uuid.UUID, error) {
 	user := NewUser(name)
-
 	u.log.InfoContext(ctx, "Creating", "user", user)
 	err := u.userRepo.Create(ctx, user)
 	return user.ID, err
@@ -52,8 +53,7 @@ func (u *UserService) Update(ctx context.Context, id uuid.UUID, name string) err
 		return err
 	}
 
-	user.Update(name)
-
 	u.log.InfoContext(ctx, "Updating", "user", user)
+	user.Update(name)
 	return u.userRepo.Update(ctx, user)
 }
