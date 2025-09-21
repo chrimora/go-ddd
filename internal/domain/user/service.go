@@ -11,6 +11,7 @@ type UserRepositoryI interface {
 	Get(context.Context, uuid.UUID) (*User, error)
 	Create(context.Context, *User) error
 	Update(context.Context, *User) error
+	Remove(context.Context, *User) error
 }
 
 // TODO; split

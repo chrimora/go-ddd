@@ -56,6 +56,16 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 	return i, err
 }
 
+const removeUser = `-- name: RemoveUser :exec
+DELETE FROM users
+WHERE id = $1
+`
+
+func (q *Queries) RemoveUser(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, removeUser, id)
+	return err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET version = version + 1, updated_at = $3, name = $4 

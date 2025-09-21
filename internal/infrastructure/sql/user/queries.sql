@@ -12,3 +12,7 @@ SET version = version + 1, updated_at = $3, name = $4
 WHERE id = $1
 AND version = $2
 RETURNING id;
+
+-- name: RemoveUser :exec
+DELETE FROM users
+WHERE id = $1;

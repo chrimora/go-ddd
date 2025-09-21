@@ -17,6 +17,7 @@ var Module = fx.Module(
 )
 
 type (
-	User         = user.User
-	UserServiceI = user.UserServiceI
+	User            = user.User
+	UserServiceI    = user.UserServiceI
+	UserRepositoryI = user.UserRepositoryI
 )

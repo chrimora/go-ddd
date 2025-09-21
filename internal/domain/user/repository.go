@@ -90,3 +90,7 @@ func (u *UserRepository) Update(ctx context.Context, user *User) error {
 	}
 	return err
 }
+
+func (u *UserRepository) Remove(ctx context.Context, user *User) error {
+	return u.userSql.RemoveUser(ctx, user.ID)
+}
