@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"gotemplate/internal/common"
+	"goddd/internal/common"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"

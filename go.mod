@@ -1,4 +1,4 @@
-module gotemplate
+module goddd
 
 go 1.23.0
 

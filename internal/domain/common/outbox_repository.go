@@ -3,8 +3,8 @@ package common
 import (
 	"context"
 	"encoding/json"
-	"gotemplate/internal/common"
-	outboxdb "gotemplate/internal/infrastructure/sql/codegen/outbox"
+	"goddd/internal/common"
+	outboxdb "goddd/internal/infrastructure/sql/codegen/outbox"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"

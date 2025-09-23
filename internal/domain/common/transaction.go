@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"gotemplate/internal/common"
+	"goddd/internal/common"
 	"log/slog"
 
 	"github.com/jackc/pgx/v5"

@@ -1,8 +1,8 @@
 package domain
 
 import (
-	"gotemplate/internal/domain/common"
-	"gotemplate/internal/domain/user"
+	"goddd/internal/domain/common"
+	"goddd/internal/domain/user"
 
 	"go.uber.org/fx"
 )

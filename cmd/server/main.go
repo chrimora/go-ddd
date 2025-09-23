@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"gotemplate/internal/common"
-	"gotemplate/internal/config"
-	"gotemplate/internal/domain"
-	"gotemplate/internal/infrastructure/middleware"
-	"gotemplate/internal/infrastructure/sql"
-	"gotemplate/internal/interfaces/rest"
+	"goddd/internal/common"
+	"goddd/internal/config"
+	"goddd/internal/domain"
+	"goddd/internal/infrastructure/middleware"
+	"goddd/internal/infrastructure/sql"
+	"goddd/internal/interfaces/rest"
 	"net"
 	"net/http"
 

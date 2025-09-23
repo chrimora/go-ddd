@@ -2,8 +2,8 @@ package factories
 
 import (
 	"context"
-	"gotemplate/internal/domain"
-	"gotemplate/internal/domain/common"
+	"goddd/internal/domain"
+	"goddd/internal/domain/common"
 	"testing"
 )
 

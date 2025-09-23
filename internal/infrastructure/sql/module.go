@@ -3,10 +3,10 @@ package sql
 import (
 	"context"
 	"fmt"
-	"gotemplate/internal/common"
-	"gotemplate/internal/config"
-	outboxdb "gotemplate/internal/infrastructure/sql/codegen/outbox"
-	userdb "gotemplate/internal/infrastructure/sql/codegen/user"
+	"goddd/internal/common"
+	"goddd/internal/config"
+	outboxdb "goddd/internal/infrastructure/sql/codegen/outbox"
+	userdb "goddd/internal/infrastructure/sql/codegen/user"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/fx"

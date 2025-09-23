@@ -2,7 +2,7 @@ package user
 
 import (
 	"fmt"
-	"gotemplate/internal/domain/common"
+	"goddd/internal/domain/common"
 	"time"
 )
 

@@ -1,11 +1,11 @@
 package test
 
 import (
-	"gotemplate/internal/common"
-	"gotemplate/internal/config"
-	"gotemplate/internal/domain"
-	"gotemplate/internal/infrastructure/sql"
-	"gotemplate/test/factories"
+	"goddd/internal/common"
+	"goddd/internal/config"
+	"goddd/internal/domain"
+	"goddd/internal/infrastructure/sql"
+	"goddd/test/factories"
 
 	"go.uber.org/fx"
 )
@@ -15,9 +15,9 @@ var IntegrationTestModule = fx.Module(
 	fx.Supply(config.ServiceConfig{Name: "test"}),
 	fx.Supply(&config.DBConfig{
 		DBHost:     "localhost",
-		DBUser:     "gotemplate",
-		DBName:     "gotemplate",
-		DBPassword: "gotemplate",
+		DBUser:     "goddd",
+		DBName:     "goddd",
+		DBPassword: "goddd",
 	}),
 	fx.Provide(
 		common.NewLogger,

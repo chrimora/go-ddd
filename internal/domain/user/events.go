@@ -1,7 +1,7 @@
 package user
 
 import (
-	"gotemplate/internal/domain/common"
+	"goddd/internal/domain/common"
 
 	"github.com/google/uuid"
 )

@@ -2,7 +2,7 @@ package common
 
 import (
 	"context"
-	"gotemplate/internal/config"
+	"goddd/internal/config"
 	"log/slog"
 	"os"
 )

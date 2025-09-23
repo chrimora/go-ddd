@@ -4,10 +4,10 @@ package user_test
 
 import (
 	"context"
-	"gotemplate/internal/domain"
-	"gotemplate/internal/domain/common"
-	"gotemplate/test"
-	"gotemplate/test/factories"
+	"goddd/internal/domain"
+	"goddd/internal/domain/common"
+	"goddd/test"
+	"goddd/test/factories"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
