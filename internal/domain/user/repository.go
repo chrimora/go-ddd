@@ -61,13 +61,8 @@ func (u *UserRepository) Create(ctx context.Context, user *User) error {
 		},
 	)
 
-	tx.TrackEvents(user)
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return err
+	tx.AddEvents(user.PullEvents()...)
+	return tx.Commit()
 }
 
 func (u *UserRepository) Update(ctx context.Context, user *User) error {

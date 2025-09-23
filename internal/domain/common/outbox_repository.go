@@ -36,11 +36,11 @@ func (e *OutboxRepository) Create(
 	eventContext common.ServiceContext,
 	event DomainEventI,
 ) error {
-	_eventContext, err := json.Marshal(eventContext)
+	contextPayload, err := json.Marshal(eventContext)
 	if err != nil {
 		return err
 	}
-	_event, err := json.Marshal(event)
+	eventPayload, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
@@ -49,9 +49,9 @@ func (e *OutboxRepository) Create(
 		ctx,
 		outboxdb.CreateEventParams{
 			AggregateID:  event.GetAggregateId(),
-			EventContext: _eventContext,
+			EventContext: contextPayload,
 			EventType:    string(event.GetType()),
-			Payload:      _event,
+			Payload:      eventPayload,
 		},
 	)
 }

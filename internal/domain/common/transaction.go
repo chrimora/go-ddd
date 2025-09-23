@@ -12,26 +12,21 @@ type Tx struct {
 	log              *slog.Logger
 	outboxRepository OutboxRepositoryI
 
-	Tx         pgx.Tx
-	ctx        context.Context
-	aggregates []AggregateRootI
+	Tx     pgx.Tx
+	ctx    context.Context
+	events []DomainEventI
 }
 
 func (tx *Tx) Rollback() error {
 	return tx.Tx.Rollback(tx.ctx)
 }
 
-func (tx *Tx) TrackEvents(aggregate AggregateRootI) {
-	tx.aggregates = append(tx.aggregates, aggregate)
+func (tx *Tx) AddEvents(events ...DomainEventI) {
+	tx.events = append(tx.events, events...)
 }
 
 func (tx *Tx) Commit() error {
-	var events []DomainEventI
-	for _, agg := range tx.aggregates {
-		events = append(events, agg.PullEvents()...)
-	}
-
-	for _, event := range events {
+	for _, event := range tx.events {
 		serviceContext, err := common.NewServiceCtx(tx.ctx)
 		if err != nil {
 			return err
