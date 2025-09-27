@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"goddd/internal/domain/common"
+	"goddd/internal/domain/outbox"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -24,14 +26,23 @@ type UserServiceI interface {
 }
 
 type UserService struct {
-	log      *slog.Logger
-	userRepo UserRepositoryI
+	log        *slog.Logger
+	txManager  *common.TxManager
+	outboxRepo outbox.OutboxRepositoryI
+	userRepo   UserRepositoryI
 }
 
-func NewUserService(log *slog.Logger, userRepo UserRepositoryI) *UserService {
+func NewUserService(
+	log *slog.Logger,
+	txManager *common.TxManager,
+	outboxRepo outbox.OutboxRepositoryI,
+	userRepo UserRepositoryI,
+) *UserService {
 	return &UserService{
-		log:      log,
-		userRepo: userRepo,
+		log:        log,
+		txManager:  txManager,
+		outboxRepo: outboxRepo,
+		userRepo:   userRepo,
 	}
 }
 
@@ -44,7 +55,15 @@ func (u *UserService) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 func (u *UserService) Create(ctx context.Context, name string) (uuid.UUID, error) {
 	user := NewUser(name)
 	u.log.InfoContext(ctx, "Creating", "user", user)
-	err := u.userRepo.Create(ctx, user)
+
+	err := u.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
+		err := u.userRepo.Create(txCtx, user)
+		if err != nil {
+			return err
+		}
+		return u.outboxRepo.CreateMany(txCtx, user.PullEvents()...)
+	})
+
 	return user.ID, err
 }
 
@@ -54,7 +73,14 @@ func (u *UserService) Update(ctx context.Context, id uuid.UUID, name string) err
 		return err
 	}
 
-	u.log.InfoContext(ctx, "Updating", "user", user)
 	user.Update(name)
-	return u.userRepo.Update(ctx, user)
+	u.log.InfoContext(ctx, "Updating", "user", user)
+
+	return u.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
+		err := u.userRepo.Update(txCtx, user)
+		if err != nil {
+			return err
+		}
+		return u.outboxRepo.CreateMany(txCtx, user.PullEvents()...)
+	})
 }

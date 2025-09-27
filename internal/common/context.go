@@ -11,25 +11,25 @@ const (
 	UserIdKey    = "userId"
 )
 
-type ServiceContext struct {
+type TraceContext struct {
 	RequestId string `json:"requestId"`
 	UserId    string `json:"userId"`
 }
 
-var ErrBadContext = errors.New("bad context")
+var ErrBadContext = errors.New("bad trace context")
 
-func NewServiceCtx(ctx context.Context) (ServiceContext, error) {
+func NewTraceCtx(ctx context.Context) (TraceContext, error) {
 	requestId, ok := ctx.Value(RequestIdKey).(string)
 	if !ok || requestId == "" {
-		return ServiceContext{}, fmt.Errorf("%w: %s", ErrBadContext, RequestIdKey)
+		return TraceContext{}, fmt.Errorf("%w: %s", ErrBadContext, RequestIdKey)
 	}
 
 	userId, ok := ctx.Value(UserIdKey).(string)
 	if !ok || userId == "" {
-		// return ServiceContext{}, fmt.Errorf("%w: %s", ErrBadContext, UserIdKey)
+		// return TraceContext{}, fmt.Errorf("%w: %s", ErrBadContext, UserIdKey)
 	}
 
-	return ServiceContext{
+	return TraceContext{
 		RequestId: requestId,
 		UserId:    userId,
 	}, nil

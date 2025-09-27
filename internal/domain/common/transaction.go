@@ -3,53 +3,55 @@ package common
 import (
 	"context"
 	"goddd/internal/common"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 )
 
-type Tx struct {
-	log              *slog.Logger
-	outboxRepository OutboxRepositoryI
+var txKey = "tx"
 
-	Tx     pgx.Tx
-	ctx    context.Context
-	events []DomainEventI
+type withTxFunc[T any] interface {
+	WithTx(tx pgx.Tx) T
 }
 
-func (tx *Tx) Rollback() error {
-	return tx.Tx.Rollback(tx.ctx)
-}
-
-func (tx *Tx) AddEvents(events ...DomainEventI) {
-	tx.events = append(tx.events, events...)
-}
-
-func (tx *Tx) Commit() error {
-	for _, event := range tx.events {
-		serviceContext, err := common.NewServiceCtx(tx.ctx)
-		if err != nil {
-			return err
-		}
-		err = tx.outboxRepository.WithTx(tx.Tx).Create(tx.ctx, serviceContext, event)
-		if err != nil {
-			return err
-		}
-
+// Return sql with a transaction from the context (if it exists)
+func WithTxFromCtx[T withTxFunc[T]](sql T, ctx context.Context) T {
+	tx, ok := ctx.Value(txKey).(pgx.Tx)
+	if ok && tx != nil {
+		return sql.WithTx(tx)
 	}
-	return tx.Tx.Commit(tx.ctx)
+	return sql
 }
 
-type TxFactory func(context.Context) (*Tx, error)
+type TxFactory func(context.Context) (pgx.Tx, error)
 
-func NewTxFactory(db common.DBTX, log *slog.Logger, outboxRepository OutboxRepositoryI) TxFactory {
-	return func(ctx context.Context) (*Tx, error) {
-		tx, err := db.Begin(ctx)
-		return &Tx{
-			log:              log,
-			outboxRepository: outboxRepository,
-			Tx:               tx,
-			ctx:              ctx,
-		}, err
+func NewTxFactory(db common.DBTX) TxFactory {
+	return func(ctx context.Context) (pgx.Tx, error) {
+		return db.Begin(ctx)
 	}
+}
+
+type TxManager struct {
+	txFactory TxFactory
+}
+
+func NewTxManager(txFactory TxFactory) *TxManager {
+	return &TxManager{txFactory: txFactory}
+}
+
+type TxFunc func(ctx context.Context) error
+
+// Provide a context with a new transaction
+func (m *TxManager) WithTxCtx(ctx context.Context, fn TxFunc) error {
+	tx, err := m.txFactory(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	txCtx := context.WithValue(ctx, txKey, tx)
+
+	if err := fn(txCtx); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }

@@ -12,16 +12,17 @@ import (
 )
 
 type UserRepository struct {
-	log       *slog.Logger
-	txFactory common.TxFactory
-	userSql   *userdb.Queries
+	log     *slog.Logger
+	userSql *userdb.Queries
 }
 
-func NewUserRepository(log *slog.Logger, txFactory common.TxFactory, userSql *userdb.Queries) *UserRepository {
+func NewUserRepository(
+	log *slog.Logger,
+	userSql *userdb.Queries,
+) *UserRepository {
 	return &UserRepository{
-		log:       log,
-		txFactory: txFactory,
-		userSql:   userSql,
+		log:     log,
+		userSql: userSql,
 	}
 }
 
@@ -44,13 +45,7 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 }
 
 func (u *UserRepository) Create(ctx context.Context, user *User) error {
-	tx, err := u.txFactory(ctx)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	_, err = u.userSql.WithTx(tx.Tx).CreateUser(
+	_, err := common.WithTxFromCtx(u.userSql, ctx).CreateUser(
 		ctx,
 		userdb.CreateUserParams{
 			ID:        user.ID,
@@ -60,13 +55,11 @@ func (u *UserRepository) Create(ctx context.Context, user *User) error {
 			Name:      user.Name,
 		},
 	)
-
-	tx.AddEvents(user.PullEvents()...)
-	return tx.Commit()
+	return err
 }
 
 func (u *UserRepository) Update(ctx context.Context, user *User) error {
-	_, err := u.userSql.UpdateUser(
+	_, err := common.WithTxFromCtx(u.userSql, ctx).UpdateUser(
 		ctx,
 		userdb.UpdateUserParams{
 			ID:        user.ID,
@@ -87,5 +80,5 @@ func (u *UserRepository) Update(ctx context.Context, user *User) error {
 }
 
 func (u *UserRepository) Remove(ctx context.Context, user *User) error {
-	return u.userSql.RemoveUser(ctx, user.ID)
+	return common.WithTxFromCtx(u.userSql, ctx).RemoveUser(ctx, user.ID)
 }

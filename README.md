@@ -6,15 +6,13 @@ Simple DDD template for Go.
   - Docker compose DB
   - Taskfile commands
   - Declarative migrations - Atlas
+
 - Code
   - Environment config - env & dotenv
   - Contextual logging - slog
   - Open API gen & request validation - Huma
   - Dependency injection - fx
   - Repository implementation - sqlc
-
-TODO; worker
-TODO; split service into commands/queries
 
 ## Requirements
 
@@ -44,4 +42,9 @@ When creating a new table, add your sql schema into infrastructure/sql, then upd
 Then run:
 - `task sqlgen`
 - `task migrate`
+
+## TODOs
+
+- Worker
+- Split service into commands/queries
 

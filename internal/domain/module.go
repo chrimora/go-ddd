@@ -2,6 +2,7 @@ package domain
 
 import (
 	"goddd/internal/domain/common"
+	"goddd/internal/domain/outbox"
 	"goddd/internal/domain/user"
 
 	"go.uber.org/fx"
@@ -11,8 +12,9 @@ var Module = fx.Module(
 	"domain",
 	fx.Provide(
 		common.NewTxFactory,
-		common.NewOutboxRepository,
+		common.NewTxManager,
 	),
+	outbox.Module,
 	user.Module,
 )
 
