@@ -19,6 +19,9 @@ var Module = fx.Module(
 )
 
 type (
+	EventType    = common.EventType
+	DomainEventI = common.DomainEventI
+
 	User            = user.User
 	UserServiceI    = user.UserServiceI
 	UserRepositoryI = user.UserRepositoryI

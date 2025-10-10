@@ -5,19 +5,65 @@
 package outboxdb
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 )
 
+type EventStatus string
+
+const (
+	EventStatusPending   EventStatus = "Pending"
+	EventStatusClaimed   EventStatus = "Claimed"
+	EventStatusProcessed EventStatus = "Processed"
+)
+
+func (e *EventStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EventStatus(s)
+	case string:
+		*e = EventStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EventStatus: %T", src)
+	}
+	return nil
+}
+
+type NullEventStatus struct {
+	EventStatus EventStatus
+	Valid       bool // Valid is true if EventStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEventStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.EventStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EventStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEventStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EventStatus), nil
+}
+
 type EventOutbox struct {
-	ID           int32
-	AggregateID  uuid.UUID
-	EventContext []byte
-	EventType    string
-	Payload      []byte
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Retries      int32
-	ProcessedAt  *time.Time
+	ID            uuid.UUID
+	AggregateID   uuid.UUID
+	AggregateType string
+	EventContext  []byte
+	EventType     string
+	Payload       []byte
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Retries       int32
+	Status        EventStatus
 }

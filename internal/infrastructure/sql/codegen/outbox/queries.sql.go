@@ -12,73 +12,111 @@ import (
 	"github.com/google/uuid"
 )
 
-const createEvent = `-- name: CreateEvent :exec
-INSERT INTO event_outbox (aggregate_id, event_context, event_type, payload)
-VALUES ($1, $2, $3, $4)
+const claimNextEvent = `-- name: ClaimNextEvent :one
+WITH candidates AS (
+    SELECT o1.id
+    FROM event_outbox o1
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM event_outbox o2
+        WHERE o2.aggregate_id = o1.aggregate_id
+        AND o2.created_at < o1.created_at
+        AND o2.status IN ('Pending', 'Claimed')
+    )
+    AND status = 'Pending'
+    AND retries < 3
+    ORDER BY created_at, aggregate_id
+    FOR UPDATE SKIP LOCKED
+    LIMIT 1 -- increase to collect a batch
+)
+UPDATE event_outbox
+SET status = 'Claimed', updated_at = now()
+WHERE id IN (SELECT id FROM candidates)
+RETURNING id, aggregate_id, aggregate_type, event_context, event_type, payload, created_at, updated_at, retries, status
 `
 
-type CreateEventParams struct {
-	AggregateID  uuid.UUID
-	EventContext []byte
-	EventType    string
-	Payload      []byte
-}
-
-func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) error {
-	_, err := q.db.Exec(ctx, createEvent,
-		arg.AggregateID,
-		arg.EventContext,
-		arg.EventType,
-		arg.Payload,
-	)
-	return err
-}
-
-const getNextEvent = `-- name: GetNextEvent :one
-SELECT DISTINCT ON (aggregate_id) id, aggregate_id, event_context, event_type, payload, created_at, updated_at, retries, processed_at
-FROM event_outbox
-WHERE processed_at IS NULL
-AND retries < 3
-ORDER BY aggregate_id, created_at
-LIMIT 1
-FOR UPDATE SKIP LOCKED
-`
-
-func (q *Queries) GetNextEvent(ctx context.Context) (EventOutbox, error) {
-	row := q.db.QueryRow(ctx, getNextEvent)
+func (q *Queries) ClaimNextEvent(ctx context.Context) (EventOutbox, error) {
+	row := q.db.QueryRow(ctx, claimNextEvent)
 	var i EventOutbox
 	err := row.Scan(
 		&i.ID,
 		&i.AggregateID,
+		&i.AggregateType,
 		&i.EventContext,
 		&i.EventType,
 		&i.Payload,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Retries,
-		&i.ProcessedAt,
+		&i.Status,
 	)
 	return i, err
 }
 
-const updateEvent = `-- name: UpdateEvent :one
+const completeEvent = `-- name: CompleteEvent :exec
 UPDATE event_outbox
-SET updated_at = now(),
-    retries = $2,
-    processed_at = $3
+SET status = 'Processed', updated_at = now()
 WHERE id = $1
+`
+
+func (q *Queries) CompleteEvent(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, completeEvent, id)
+	return err
+}
+
+const createEvent = `-- name: CreateEvent :exec
+INSERT INTO event_outbox (
+    id,
+    aggregate_id,
+    aggregate_type,
+    event_context,
+    event_type,
+    payload,
+    created_at,
+    updated_at,
+    retries,
+    status
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING id
 `
 
-type UpdateEventParams struct {
-	ID          int32
-	Retries     int32
-	ProcessedAt *time.Time
+type CreateEventParams struct {
+	ID            uuid.UUID
+	AggregateID   uuid.UUID
+	AggregateType string
+	EventContext  []byte
+	EventType     string
+	Payload       []byte
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Retries       int32
+	Status        EventStatus
 }
 
-func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (int32, error) {
-	row := q.db.QueryRow(ctx, updateEvent, arg.ID, arg.Retries, arg.ProcessedAt)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) error {
+	_, err := q.db.Exec(ctx, createEvent,
+		arg.ID,
+		arg.AggregateID,
+		arg.AggregateType,
+		arg.EventContext,
+		arg.EventType,
+		arg.Payload,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.Retries,
+		arg.Status,
+	)
+	return err
+}
+
+const requeueEvent = `-- name: RequeueEvent :exec
+UPDATE event_outbox
+SET status = 'Pending', retries = retries + 1, updated_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) RequeueEvent(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, requeueEvent, id)
+	return err
 }

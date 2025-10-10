@@ -43,8 +43,3 @@ Then run:
 - `task sqlgen`
 - `task migrate`
 
-## TODOs
-
-- Worker
-- Split service into commands/queries
-
