@@ -2,10 +2,10 @@ package main
 
 import (
 	"goddd/internal/common"
+	"goddd/internal/common/interfaces/rest"
 	"goddd/internal/config"
-	"goddd/internal/domain"
-	"goddd/internal/infrastructure/sql"
-	"goddd/internal/interfaces/rest"
+	"goddd/internal/outbox"
+	"goddd/internal/user"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -17,7 +17,6 @@ func main() {
 	fx.New(
 		fx.Supply(service),
 		fx.Provide(
-			common.NewLogger,
 			rest.NewHTTPServer,
 			rest.NewServeMux,
 			fx.Annotate(
@@ -25,10 +24,10 @@ func main() {
 				fx.ParamTags(`group:"routeCollection"`),
 			),
 		),
+		common.Module,
 		config.Module,
-		domain.Module,
-		sql.Module,
-		rest.Module,
+		outbox.ServerModule,
+		user.ServerModule,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
 }
