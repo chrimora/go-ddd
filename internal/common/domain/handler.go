@@ -11,7 +11,7 @@ import (
 
 // Implementations
 type EventHandler[T DomainEventI] interface {
-	Handle(ctx context.Context, event T) error
+	Handle(ctx context.Context, log *slog.Logger, event T) error
 }
 
 // Generic EventHandler for fx
@@ -44,11 +44,11 @@ func (e *EventHandlerAdapter[T]) Handle(ctx context.Context, payload []byte) err
 		return err
 	}
 
-	handlerName := reflect.TypeOf(e.handler).Elem().Name()
-	e.log.InfoContext(ctx, "Event handler start", "handler", handlerName)
-	err = e.handler.Handle(ctx, event)
+	log := e.log.With("handler", reflect.TypeOf(e.handler).Elem().Name())
+	log.InfoContext(ctx, "Event handler start")
+	err = e.handler.Handle(ctx, log, event)
 	if err != nil {
-		e.log.ErrorContext(ctx, "Event handler error", "handler", handlerName, "err", err)
+		log.ErrorContext(ctx, "Event handler error", "err", err)
 	}
 
 	return err
