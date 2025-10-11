@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"goddd/internal/common/domain"
 	"goddd/internal/common/infrastructure"
-	outboxdb "goddd/internal/outbox/infrastructure/sql/codegen"
+	"goddd/internal/outbox/infrastructure/sql"
 	"log/slog"
 	"time"
 
@@ -14,11 +14,11 @@ import (
 
 type Dispatcher struct {
 	log      *slog.Logger
-	handlers map[domain.EventType][]domain.EventHandlerInterface
+	handlers map[commondomain.EventType][]commondomain.EventHandlerInterface
 }
 
-func NewDispatcher(handlers []domain.EventHandlerInterface, log *slog.Logger) *Dispatcher {
-	handlersMap := make(map[domain.EventType][]domain.EventHandlerInterface)
+func NewDispatcher(handlers []commondomain.EventHandlerInterface, log *slog.Logger) *Dispatcher {
+	handlersMap := make(map[commondomain.EventType][]commondomain.EventHandlerInterface)
 
 	for _, handler := range handlers {
 		eventType := handler.HandlerEventType()
@@ -31,8 +31,8 @@ func NewDispatcher(handlers []domain.EventHandlerInterface, log *slog.Logger) *D
 	}
 }
 
-func (d *Dispatcher) Dispatch(ctx context.Context, event *outboxdb.EventOutbox) error {
-	handlers, ok := d.handlers[domain.EventType(event.EventType)]
+func (d *Dispatcher) Dispatch(ctx context.Context, event *sql.EventOutbox) error {
+	handlers, ok := d.handlers[commondomain.EventType(event.EventType)]
 	if !ok {
 		return fmt.Errorf("no handler for %s", event.EventType)
 	}

@@ -2,8 +2,8 @@ package application
 
 import (
 	"context"
-	common "goddd/internal/common/domain"
-	outbox "goddd/internal/outbox/domain"
+	"goddd/internal/common/domain"
+	"goddd/internal/outbox"
 	"goddd/internal/user/domain"
 	"log/slog"
 
@@ -28,14 +28,14 @@ type UserServiceI interface {
 
 type UserService struct {
 	log        *slog.Logger
-	txManager  *common.TxManager
+	txManager  *commondomain.TxManager
 	outboxRepo outbox.OutboxRepositoryI
 	userRepo   UserRepositoryI
 }
 
 func NewUserService(
 	log *slog.Logger,
-	txManager *common.TxManager,
+	txManager *commondomain.TxManager,
 	outboxRepo outbox.OutboxRepositoryI,
 	userRepo UserRepositoryI,
 ) *UserService {

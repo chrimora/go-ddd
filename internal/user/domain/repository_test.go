@@ -4,7 +4,7 @@ package domain_test
 
 import (
 	"context"
-	common "goddd/internal/common/domain"
+	"goddd/internal/common/domain"
 	"goddd/internal/user/application"
 	"goddd/internal/user/test"
 	"testing"
@@ -56,7 +56,7 @@ func (s *UserSuite) TestRaceCondition() {
 
 	user.Update("Will")
 	err = s.repo.Update(ctx, user)
-	assert.ErrorIs(s.T(), err, common.ErrRaceCondition)
+	assert.ErrorIs(s.T(), err, commondomain.ErrRaceCondition)
 
 	user, err = s.repo.Get(ctx, user.ID)
 	require.NoError(s.T(), err)

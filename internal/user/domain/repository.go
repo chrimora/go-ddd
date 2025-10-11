@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"goddd/internal/common/domain"
-	userdb "goddd/internal/user/infrastructure/sql/codegen"
+	usersql "goddd/internal/user/infrastructure/sql"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -13,12 +13,12 @@ import (
 
 type UserRepository struct {
 	log     *slog.Logger
-	userSql *userdb.Queries
+	userSql *usersql.Queries
 }
 
 func NewUserRepository(
 	log *slog.Logger,
-	userSql *userdb.Queries,
+	userSql *usersql.Queries,
 ) *UserRepository {
 	return &UserRepository{
 		log:     log,
@@ -37,17 +37,16 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 		}
 	}
 	return &User{
-		AggregateRoot: domain.NewAggregateRootFromFields(
+		AggregateRoot: commondomain.NewAggregateRootFromFields(
 			user.ID, int(user.Version), user.CreatedAt, user.UpdatedAt,
 		),
 		Name: user.Name,
 	}, nil
 }
-
 func (u *UserRepository) Create(ctx context.Context, user *User) error {
-	_, err := domain.WithTxFromCtx(u.userSql, ctx).CreateUser(
+	_, err := commondomain.WithTxFromCtx(u.userSql, ctx).CreateUser(
 		ctx,
-		userdb.CreateUserParams{
+		usersql.CreateUserParams{
 			ID:        user.ID,
 			Version:   int32(user.GetVersion()),
 			CreatedAt: user.CreatedAt,
@@ -59,9 +58,9 @@ func (u *UserRepository) Create(ctx context.Context, user *User) error {
 }
 
 func (u *UserRepository) Update(ctx context.Context, user *User) error {
-	_, err := domain.WithTxFromCtx(u.userSql, ctx).UpdateUser(
+	_, err := commondomain.WithTxFromCtx(u.userSql, ctx).UpdateUser(
 		ctx,
-		userdb.UpdateUserParams{
+		usersql.UpdateUserParams{
 			ID:        user.ID,
 			Version:   int32(user.GetVersion()),
 			UpdatedAt: user.UpdatedAt,
@@ -80,5 +79,5 @@ func (u *UserRepository) Update(ctx context.Context, user *User) error {
 }
 
 func (u *UserRepository) Remove(ctx context.Context, user *User) error {
-	return domain.WithTxFromCtx(u.userSql, ctx).RemoveUser(ctx, user.ID)
+	return commondomain.WithTxFromCtx(u.userSql, ctx).RemoveUser(ctx, user.ID)
 }

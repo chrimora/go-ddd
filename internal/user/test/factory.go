@@ -2,7 +2,7 @@ package test
 
 import (
 	"context"
-	common "goddd/internal/common/domain"
+	"goddd/internal/common/domain"
 	"goddd/internal/common/test"
 	"goddd/internal/user/application"
 	"goddd/internal/user/domain"
@@ -20,10 +20,10 @@ func NewUserFactory(repo application.UserRepositoryI) *UserFactory {
 func (f *UserFactory) Mock(t *testing.T, overrides ...map[string]any) *domain.User {
 	ctx := context.Background()
 	user := &domain.User{
-		AggregateRoot: common.NewAggregateRoot(),
+		AggregateRoot: commondomain.NewAggregateRoot(),
 		Name:          "Christopher",
 	}
-	test.Merge(user, overrides)
+	commontest.Merge(user, overrides)
 
 	f.repo.Create(ctx, user)
 	t.Cleanup(func() {

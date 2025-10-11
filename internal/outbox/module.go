@@ -4,7 +4,7 @@ import (
 	"goddd/internal/common/infrastructure/sql"
 	"goddd/internal/outbox/application"
 	"goddd/internal/outbox/domain"
-	outboxdb "goddd/internal/outbox/infrastructure/sql/codegen"
+	"goddd/internal/outbox/infrastructure/sql"
 
 	"go.uber.org/fx"
 )
@@ -31,6 +31,6 @@ var WorkerModule = fx.Module(
 	),
 )
 
-func NewOutboxSql(db sql.DBTX) *outboxdb.Queries {
-	return outboxdb.New(db)
+func NewOutboxSql(db commonsql.DBTX) *sql.Queries {
+	return sql.New(db)
 }

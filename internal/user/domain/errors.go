@@ -8,8 +8,8 @@ import (
 )
 
 func ErrNotFound(id uuid.UUID) error {
-	return fmt.Errorf("%w: user %s", domain.ErrNotFound, id)
+	return fmt.Errorf("%w: user %s", commondomain.ErrNotFound, id)
 }
 func ErrRaceCondition(id uuid.UUID) error {
-	return fmt.Errorf("%w: user %s", domain.ErrRaceCondition, id)
+	return fmt.Errorf("%w: user %s", commondomain.ErrRaceCondition, id)
 }

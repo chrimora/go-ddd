@@ -2,6 +2,8 @@
 
 Simple DDD template for Go.
 
+Vertical layered web service + async worker.
+
 - Infra
   - Docker compose DB
   - Taskfile commands
@@ -35,7 +37,7 @@ Checkout http://localhost:8080/docs
 
 Using SQLC and Atlas to manage sql + migrations.
 
-When creating a new table, add your sql schema into infrastructure/sql, then update:
+When adding new schema and queries update:
 - sqlc.yaml
 - atlas.hcl
 

@@ -4,7 +4,6 @@ import (
 	"goddd/internal/common"
 	"goddd/internal/config"
 	"goddd/internal/outbox"
-	"goddd/internal/outbox/application"
 	"goddd/internal/user"
 
 	"go.uber.org/fx"
@@ -14,10 +13,10 @@ func main() {
 	service := config.ServiceConfig{Name: "worker"}
 	fx.New(
 		fx.Supply(service),
-		common.Module,
+		common.CoreModule,
 		config.Module,
 		outbox.WorkerModule,
 		user.WorkerModule,
-		fx.Invoke(func(*application.Worker) {}),
+		fx.Invoke(func(*outbox.Worker) {}),
 	).Run()
 }

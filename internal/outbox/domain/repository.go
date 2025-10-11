@@ -7,7 +7,7 @@ import (
 	"errors"
 	"goddd/internal/common/domain"
 	"goddd/internal/common/infrastructure"
-	outboxdb "goddd/internal/outbox/infrastructure/sql/codegen"
+	outboxsql "goddd/internal/outbox/infrastructure/sql"
 	"log/slog"
 	"time"
 
@@ -15,18 +15,18 @@ import (
 )
 
 type OutboxRepositoryI interface {
-	CreateMany(context.Context, ...domain.DomainEventI) error
-	GetNextEvent(context.Context) (*outboxdb.EventOutbox, error)
+	CreateMany(context.Context, ...commondomain.DomainEventI) error
+	GetNextEvent(context.Context) (*outboxsql.EventOutbox, error)
 	RequeueEvent(context.Context, uuid.UUID) error
 	CompleteEvent(context.Context, uuid.UUID) error
 }
 
 type OutboxRepository struct {
 	log       *slog.Logger
-	outboxSql *outboxdb.Queries
+	outboxSql *outboxsql.Queries
 }
 
-func NewOutboxRepository(log *slog.Logger, outboxSql *outboxdb.Queries) OutboxRepositoryI {
+func NewOutboxRepository(log *slog.Logger, outboxSql *outboxsql.Queries) OutboxRepositoryI {
 	return &OutboxRepository{
 		log:       log,
 		outboxSql: outboxSql,
@@ -35,7 +35,7 @@ func NewOutboxRepository(log *slog.Logger, outboxSql *outboxdb.Queries) OutboxRe
 
 func (e *OutboxRepository) CreateMany(
 	ctx context.Context,
-	events ...domain.DomainEventI,
+	events ...commondomain.DomainEventI,
 ) error {
 	traceContext := infrastructure.NewTraceCtx(ctx)
 	err := traceContext.IsComplete()
@@ -48,16 +48,16 @@ func (e *OutboxRepository) CreateMany(
 	}
 
 	t := time.Now().UTC()
-	outboxSql := domain.WithTxFromCtx(e.outboxSql, ctx)
+	outboxQ := commondomain.WithTxFromCtx(e.outboxSql, ctx)
 	for _, event := range events {
 		eventPayload, err := json.Marshal(event)
 		if err != nil {
 			return err
 		}
 
-		err = outboxSql.CreateEvent(
+		err = outboxQ.CreateEvent(
 			ctx,
-			outboxdb.CreateEventParams{
+			outboxsql.CreateEventParams{
 				ID:            uuid.New(),
 				AggregateID:   event.GetAggregateId(),
 				AggregateType: event.GetAggregateType(),
@@ -67,7 +67,7 @@ func (e *OutboxRepository) CreateMany(
 				CreatedAt:     t,
 				UpdatedAt:     t,
 				Retries:       0,
-				Status:        outboxdb.EventStatusPending,
+				Status:        outboxsql.EventStatusPending,
 			},
 		)
 		if err != nil {
@@ -77,12 +77,12 @@ func (e *OutboxRepository) CreateMany(
 	return nil
 }
 
-func (e *OutboxRepository) GetNextEvent(ctx context.Context) (*outboxdb.EventOutbox, error) {
+func (e *OutboxRepository) GetNextEvent(ctx context.Context) (*outboxsql.EventOutbox, error) {
 	event, err := e.outboxSql.ClaimNextEvent(ctx)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
-			return nil, domain.ErrNotFound
+			return nil, commondomain.ErrNotFound
 		default:
 			return nil, err
 		}
@@ -91,9 +91,9 @@ func (e *OutboxRepository) GetNextEvent(ctx context.Context) (*outboxdb.EventOut
 }
 
 func (e *OutboxRepository) RequeueEvent(ctx context.Context, id uuid.UUID) error {
-	return domain.WithTxFromCtx(e.outboxSql, ctx).RequeueEvent(ctx, id)
+	return commondomain.WithTxFromCtx(e.outboxSql, ctx).RequeueEvent(ctx, id)
 }
 
 func (e *OutboxRepository) CompleteEvent(ctx context.Context, id uuid.UUID) error {
-	return domain.WithTxFromCtx(e.outboxSql, ctx).CompleteEvent(ctx, id)
+	return commondomain.WithTxFromCtx(e.outboxSql, ctx).CompleteEvent(ctx, id)
 }

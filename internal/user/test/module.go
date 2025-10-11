@@ -9,7 +9,7 @@ import (
 
 var IntegrationTestModule = fx.Module(
 	"user_test",
-	test.CoreModule,
+	commontest.CoreModule,
 	user.CoreModule,
 	fx.Provide(
 		NewUserFactory,

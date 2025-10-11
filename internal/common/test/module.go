@@ -1,4 +1,4 @@
-package test
+package commontest
 
 import (
 	"goddd/internal/common"
@@ -16,5 +16,5 @@ var CoreModule = fx.Module(
 		DBName:     "goddd",
 		DBPassword: "goddd",
 	}),
-	common.Module,
+	common.CoreModule,
 )

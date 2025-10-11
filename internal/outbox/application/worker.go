@@ -3,9 +3,9 @@ package application
 import (
 	"context"
 	"errors"
-	common "goddd/internal/common/domain"
+	"goddd/internal/common/domain"
 	"goddd/internal/outbox/domain"
-	outboxdb "goddd/internal/outbox/infrastructure/sql/codegen"
+	"goddd/internal/outbox/infrastructure/sql"
 	"log/slog"
 	"time"
 
@@ -14,7 +14,7 @@ import (
 
 type Worker struct {
 	log        *slog.Logger
-	txManager  *common.TxManager
+	txManager  *commondomain.TxManager
 	outboxRepo domain.OutboxRepositoryI
 	dispatch   *Dispatcher
 
@@ -25,7 +25,7 @@ type Worker struct {
 func NewWorker(
 	lc fx.Lifecycle,
 	log *slog.Logger,
-	txManager *common.TxManager,
+	txManager *commondomain.TxManager,
 	outboxRepo domain.OutboxRepositoryI,
 	dispatch *Dispatcher,
 ) *Worker {
@@ -74,7 +74,7 @@ func (w *Worker) Stop() {
 }
 
 func (w *Worker) processNext(ctx context.Context) {
-	var event *outboxdb.EventOutbox
+	var event *sql.EventOutbox
 	err := w.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
 		e, err := w.outboxRepo.GetNextEvent(txCtx)
 		event = e
@@ -82,7 +82,7 @@ func (w *Worker) processNext(ctx context.Context) {
 	})
 	if err != nil {
 		switch {
-		case errors.Is(err, common.ErrNotFound):
+		case errors.Is(err, commondomain.ErrNotFound):
 			// Backoff?
 			return
 		default:

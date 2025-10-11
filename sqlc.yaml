@@ -35,8 +35,8 @@ sql:
     queries: "./internal/outbox/infrastructure/sql/queries.sql"
     gen:
       go:
-        package: "outboxdb"
-        out: "./internal/outbox/infrastructure/sql/codegen"
+        package: "sql"
+        out: "./internal/outbox/infrastructure/sql"
         <<: *common_overrides
   - name: "user"
     engine: "postgresql"
@@ -44,6 +44,6 @@ sql:
     queries: "./internal/user/infrastructure/sql/queries.sql"
     gen:
       go:
-        package: "userdb"
-        out: "./internal/user/infrastructure/sql/codegen"
+        package: "sql"
+        out: "./internal/user/infrastructure/sql"
         <<: *common_overrides

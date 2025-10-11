@@ -2,7 +2,6 @@ package main
 
 import (
 	"goddd/internal/common"
-	"goddd/internal/common/interfaces/rest"
 	"goddd/internal/config"
 	"goddd/internal/outbox"
 	"goddd/internal/user"
@@ -16,15 +15,7 @@ func main() {
 	service := config.ServiceConfig{Name: "server"}
 	fx.New(
 		fx.Supply(service),
-		fx.Provide(
-			rest.NewHTTPServer,
-			rest.NewServeMux,
-			fx.Annotate(
-				rest.NewApi,
-				fx.ParamTags(`group:"routeCollection"`),
-			),
-		),
-		common.Module,
+		common.ServerModule,
 		config.Module,
 		outbox.ServerModule,
 		user.ServerModule,

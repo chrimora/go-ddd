@@ -7,13 +7,13 @@ import (
 )
 
 type User struct {
-	domain.AggregateRoot
+	commondomain.AggregateRoot
 	Name string
 }
 
 func NewUser(name string) *User {
 	user := &User{
-		AggregateRoot: domain.NewAggregateRoot(),
+		AggregateRoot: commondomain.NewAggregateRoot(),
 		Name:          name,
 	}
 	user.AddEvent(NewUserCreatedEvent(user.ID))

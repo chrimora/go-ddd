@@ -1,4 +1,4 @@
-package rest
+package commonrest
 
 import (
 	"context"

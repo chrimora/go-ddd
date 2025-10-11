@@ -6,22 +6,22 @@ import (
 	"github.com/google/uuid"
 )
 
-type userEventRoot struct{ domain.DomainEventRoot }
+type userEventRoot struct{ commondomain.DomainEventRoot }
 
 func (e userEventRoot) GetAggregateType() string {
 	return "User"
 }
 func newUserEventRoot(aggregateId uuid.UUID) userEventRoot {
 	return userEventRoot{
-		DomainEventRoot: domain.DomainEventRoot{AggregateId: aggregateId},
+		DomainEventRoot: commondomain.DomainEventRoot{AggregateId: aggregateId},
 	}
 }
 
-const UserCreated domain.EventType = "userCreated"
+const UserCreated commondomain.EventType = "userCreated"
 
 type UserCreatedEvent struct{ userEventRoot }
 
-func (e UserCreatedEvent) GetEventType() domain.EventType {
+func (e UserCreatedEvent) GetEventType() commondomain.EventType {
 	return UserCreated
 }
 func NewUserCreatedEvent(aggregateId uuid.UUID) UserCreatedEvent {

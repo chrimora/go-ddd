@@ -1,4 +1,4 @@
-package domain
+package commondomain
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func WithTxFromCtx[T withTxFunc[T]](sql T, ctx context.Context) T {
 
 type TxFactory func(context.Context) (pgx.Tx, error)
 
-func NewTxFactory(db sql.DBTX) TxFactory {
+func NewTxFactory(db commonsql.DBTX) TxFactory {
 	return func(ctx context.Context) (pgx.Tx, error) {
 		return db.Begin(ctx)
 	}
