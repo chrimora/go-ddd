@@ -1,4 +1,4 @@
-CREATE TYPE event_status AS ENUM ('Pending', 'Claimed', 'Processed');
+CREATE TYPE event_status AS ENUM ('Pending', 'Claimed', 'Published');
 
 CREATE TABLE event_outbox (
     id             UUID         PRIMARY KEY,

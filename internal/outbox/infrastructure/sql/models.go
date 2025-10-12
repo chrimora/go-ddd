@@ -17,7 +17,7 @@ type EventStatus string
 const (
 	EventStatusPending   EventStatus = "Pending"
 	EventStatusClaimed   EventStatus = "Claimed"
-	EventStatusProcessed EventStatus = "Processed"
+	EventStatusPublished EventStatus = "Published"
 )
 
 func (e *EventStatus) Scan(src interface{}) error {

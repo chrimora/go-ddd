@@ -2,9 +2,7 @@ package domain
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"goddd/internal/common/domain"
 	"goddd/internal/common/infrastructure"
 	outboxsql "goddd/internal/outbox/infrastructure/sql"
@@ -16,8 +14,8 @@ import (
 
 type OutboxRepositoryI interface {
 	CreateMany(context.Context, ...commondomain.DomainEventI) error
-	GetNextEvent(context.Context) (*outboxsql.EventOutbox, error)
-	RequeueEvent(context.Context, uuid.UUID) error
+	GetNextEventBatch(context.Context, int, int) ([]*OutboxEvent, error)
+	RequeueStaleEvents(context.Context, time.Time, int) (int, error)
 	CompleteEvent(context.Context, uuid.UUID) error
 }
 
@@ -78,21 +76,41 @@ func (e *outboxRepository) CreateMany(
 	return nil
 }
 
-func (e *outboxRepository) GetNextEvent(ctx context.Context) (*outboxsql.EventOutbox, error) {
-	event, err := e.outboxSql.ClaimNextEvent(ctx)
+func (e *outboxRepository) GetNextEventBatch(
+	ctx context.Context, batchSize, retries int,
+) ([]*OutboxEvent, error) {
+	events, err := e.outboxSql.ClaimNextEventBatch(
+		ctx,
+		outboxsql.ClaimNextEventBatchParams{Limit: int32(batchSize), Retries: int32(retries)},
+	)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return nil, commondomain.ErrNotFound
-		default:
-			return nil, err
+		return nil, err
+	}
+
+	ret := make([]*OutboxEvent, len(events))
+	for i, e := range events {
+		ret[i] = &OutboxEvent{
+			ID:            e.ID,
+			AggregateID:   e.AggregateID,
+			AggregateType: e.AggregateType,
+			EventContext:  e.EventContext,
+			EventType:     e.EventType,
+			Payload:       e.Payload,
+			CreatedAt:     e.CreatedAt,
+			UpdatedAt:     e.UpdatedAt,
 		}
 	}
-	return &event, nil
+	return ret, nil
 }
 
-func (e *outboxRepository) RequeueEvent(ctx context.Context, id uuid.UUID) error {
-	return commondomain.WithTxFromCtx(e.outboxSql, ctx).RequeueEvent(ctx, id)
+func (e *outboxRepository) RequeueStaleEvents(
+	ctx context.Context, before time.Time, retries int,
+) (int, error) {
+	ids, err := commondomain.WithTxFromCtx(e.outboxSql, ctx).RequeueStaleEvents(
+		ctx,
+		outboxsql.RequeueStaleEventsParams{UpdatedAt: before, Retries: int32(retries)},
+	)
+	return len(ids), err
 }
 
 func (e *outboxRepository) CompleteEvent(ctx context.Context, id uuid.UUID) error {

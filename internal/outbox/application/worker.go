@@ -2,15 +2,19 @@ package application
 
 import (
 	"context"
-	"errors"
 	"goddd/internal/common/domain"
 	"goddd/internal/outbox/domain"
-	"goddd/internal/outbox/infrastructure/sql"
 	"log/slog"
 	"time"
 
 	"go.uber.org/fx"
 )
+
+const RetriesCutoff = 5
+const PublisherBatchSize = 10
+const PublisherBackoff = 300 * time.Millisecond
+const WatchdogTick = 3 * time.Second
+const WatchdogStaleLimit = 3 * time.Second
 
 type Worker struct {
 	log        *slog.Logger
@@ -36,13 +40,14 @@ func NewWorker(
 		txManager:  txManager,
 		outboxRepo: outboxRepo,
 		dispatch:   dispatch,
-		ticker:     time.NewTicker(500 * time.Millisecond),
+		ticker:     time.NewTicker(WatchdogTick),
 		cancel:     cancel,
 	}
 
 	lc.Append(fx.Hook{
 		OnStart: func(_ context.Context) error {
-			go worker.Run(ctx)
+			go worker.RunPublisher(ctx)
+			go worker.RunWatchdog(ctx)
 			return nil
 		},
 		OnStop: func(_ context.Context) error {
@@ -53,16 +58,37 @@ func NewWorker(
 	return worker
 }
 
-func (w *Worker) Run(ctx context.Context) {
-	w.log.Info("Worker start")
+func (w *Worker) RunPublisher(ctx context.Context) {
+	w.log.Info("Worker publisher start")
 	for {
 		select {
-		case <-w.ticker.C:
-			// New context to avoid cancelling handlers from service context
-			w.processNext(context.Background())
 		case <-ctx.Done():
 			// Cancelled
 			return
+		default:
+			has_published := w.publishBatch(ctx)
+			if !has_published {
+				time.Sleep(PublisherBackoff)
+			}
+		}
+	}
+}
+func (w *Worker) RunWatchdog(ctx context.Context) {
+	w.log.Info("Worker watchdog start")
+	for {
+		select {
+		case <-ctx.Done():
+			// Cancelled
+			return
+		case <-w.ticker.C:
+			t := time.Now().UTC().Add(-WatchdogStaleLimit)
+			count, err := w.outboxRepo.RequeueStaleEvents(ctx, t, RetriesCutoff)
+			if count > 0 {
+				w.log.Warn("StaleEvents", "count", count)
+			}
+			if err != nil {
+				w.log.Error("StaleEvent requeue error", "err", err)
+			}
 		}
 	}
 }
@@ -73,38 +99,30 @@ func (w *Worker) Stop() {
 	w.cancel()
 }
 
-func (w *Worker) processNext(ctx context.Context) {
-	var event *sql.EventOutbox
+func (w *Worker) publishBatch(ctx context.Context) bool {
+	var events []*domain.OutboxEvent
 	err := w.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
-		e, err := w.outboxRepo.GetNextEvent(txCtx)
-		event = e
+		e, err := w.outboxRepo.GetNextEventBatch(txCtx, PublisherBatchSize, RetriesCutoff)
+		events = e
 		return err
 	})
 	if err != nil {
-		switch {
-		case errors.Is(err, commondomain.ErrNotFound):
-			// Backoff?
-			return
-		default:
-			w.log.Error("Event get error", "err", err)
-			return
-		}
+		w.log.Error("EventBatch get error", "err", err)
+		return false
 	}
-	log := w.log.With("event", event.ID)
+	if len(events) == 0 {
+		return false
+	}
 
-	err = w.dispatch.Dispatch(ctx, event)
-	if err != nil {
-		log.Info("Event requeue")
-		err := w.outboxRepo.RequeueEvent(ctx, event.ID)
+	for _, event := range events {
+		log := w.log.With("event", event)
+
+		// TODO; publish
+
+		err = w.outboxRepo.CompleteEvent(ctx, event.ID)
 		if err != nil {
-			log.Error("Event requeue error", "err", err)
-			// TODO; stale event
+			log.Error("Error completing event", "err", err)
 		}
-		return
 	}
-
-	err = w.outboxRepo.CompleteEvent(ctx, event.ID)
-	if err != nil {
-		log.Error("Error completing event", "err", err)
-	}
+	return true
 }

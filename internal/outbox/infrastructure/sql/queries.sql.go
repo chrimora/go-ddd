@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const claimNextEvent = `-- name: ClaimNextEvent :one
+const claimNextEventBatch = `-- name: ClaimNextEventBatch :many
 WITH candidates AS (
     SELECT o1.id
     FROM event_outbox o1
@@ -23,11 +23,11 @@ WITH candidates AS (
         AND o2.created_at < o1.created_at
         AND o2.status IN ('Pending', 'Claimed')
     )
-    AND status = 'Pending'
-    AND retries < 3
-    ORDER BY created_at, aggregate_id
+    AND o1.status = 'Pending'
+    AND o1.retries < $2
+    ORDER BY o1.created_at, o1.aggregate_id
     FOR UPDATE SKIP LOCKED
-    LIMIT 1 -- increase to collect a batch
+    LIMIT $1
 )
 UPDATE event_outbox
 SET status = 'Claimed', updated_at = now()
@@ -35,27 +35,45 @@ WHERE id IN (SELECT id FROM candidates)
 RETURNING id, aggregate_id, aggregate_type, event_context, event_type, payload, created_at, updated_at, retries, status
 `
 
-func (q *Queries) ClaimNextEvent(ctx context.Context) (EventOutbox, error) {
-	row := q.db.QueryRow(ctx, claimNextEvent)
-	var i EventOutbox
-	err := row.Scan(
-		&i.ID,
-		&i.AggregateID,
-		&i.AggregateType,
-		&i.EventContext,
-		&i.EventType,
-		&i.Payload,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Retries,
-		&i.Status,
-	)
-	return i, err
+type ClaimNextEventBatchParams struct {
+	Limit   int32
+	Retries int32
+}
+
+func (q *Queries) ClaimNextEventBatch(ctx context.Context, arg ClaimNextEventBatchParams) ([]EventOutbox, error) {
+	rows, err := q.db.Query(ctx, claimNextEventBatch, arg.Limit, arg.Retries)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EventOutbox{}
+	for rows.Next() {
+		var i EventOutbox
+		if err := rows.Scan(
+			&i.ID,
+			&i.AggregateID,
+			&i.AggregateType,
+			&i.EventContext,
+			&i.EventType,
+			&i.Payload,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Retries,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const completeEvent = `-- name: CompleteEvent :exec
 UPDATE event_outbox
-SET status = 'Processed', updated_at = now()
+SET status = 'Published', updated_at = now()
 WHERE id = $1
 `
 
@@ -110,13 +128,36 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) error 
 	return err
 }
 
-const requeueEvent = `-- name: RequeueEvent :exec
+const requeueStaleEvents = `-- name: RequeueStaleEvents :many
 UPDATE event_outbox
 SET status = 'Pending', retries = retries + 1, updated_at = now()
-WHERE id = $1
+WHERE status = 'Claimed'
+AND updated_at < $1
+AND retries < $2
+RETURNING id
 `
 
-func (q *Queries) RequeueEvent(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, requeueEvent, id)
-	return err
+type RequeueStaleEventsParams struct {
+	UpdatedAt time.Time
+	Retries   int32
+}
+
+func (q *Queries) RequeueStaleEvents(ctx context.Context, arg RequeueStaleEventsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, requeueStaleEvents, arg.UpdatedAt, arg.Retries)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
