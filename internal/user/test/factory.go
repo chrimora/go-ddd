@@ -4,20 +4,20 @@ import (
 	"context"
 	"goddd/internal/common/domain"
 	"goddd/internal/common/test"
-	"goddd/internal/user/application"
 	"goddd/internal/user/domain"
 	"testing"
 )
 
-type UserFactory struct {
-	repo application.UserRepositoryI
+type UserFactory commontest.Mock[domain.User]
+type userFactory struct {
+	repo domain.UserRepositoryI
 }
 
-func NewUserFactory(repo application.UserRepositoryI) *UserFactory {
-	return &UserFactory{repo: repo}
+func NewUserFactory(repo domain.UserRepositoryI) UserFactory {
+	return &userFactory{repo: repo}
 }
 
-func (f *UserFactory) Mock(t *testing.T, overrides ...map[string]any) *domain.User {
+func (f *userFactory) Mock(t *testing.T, overrides ...map[string]any) *domain.User {
 	ctx := context.Background()
 	user := &domain.User{
 		AggregateRoot: commondomain.NewAggregateRoot(),

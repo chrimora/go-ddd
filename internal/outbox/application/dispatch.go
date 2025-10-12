@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"fmt"
+	"goddd/internal/common/application"
 	"goddd/internal/common/domain"
 	"goddd/internal/common/infrastructure"
 	"goddd/internal/outbox/infrastructure/sql"
@@ -14,11 +15,14 @@ import (
 
 type Dispatcher struct {
 	log      *slog.Logger
-	handlers map[commondomain.EventType][]commondomain.EventHandlerInterface
+	handlers map[commondomain.EventType][]commonapplication.EventHandlerInterface
 }
 
-func NewDispatcher(handlers []commondomain.EventHandlerInterface, log *slog.Logger) *Dispatcher {
-	handlersMap := make(map[commondomain.EventType][]commondomain.EventHandlerInterface)
+func NewDispatcher(
+	handlers []commonapplication.EventHandlerInterface,
+	log *slog.Logger,
+) *Dispatcher {
+	handlersMap := make(map[commondomain.EventType][]commonapplication.EventHandlerInterface)
 
 	for _, handler := range handlers {
 		eventType := handler.HandlerEventType()

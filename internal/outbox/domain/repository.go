@@ -21,19 +21,20 @@ type OutboxRepositoryI interface {
 	CompleteEvent(context.Context, uuid.UUID) error
 }
 
-type OutboxRepository struct {
+type OutboxRepository OutboxRepositoryI
+type outboxRepository struct {
 	log       *slog.Logger
 	outboxSql *outboxsql.Queries
 }
 
-func NewOutboxRepository(log *slog.Logger, outboxSql *outboxsql.Queries) OutboxRepositoryI {
-	return &OutboxRepository{
+func NewOutboxRepository(log *slog.Logger, outboxSql *outboxsql.Queries) OutboxRepository {
+	return &outboxRepository{
 		log:       log,
 		outboxSql: outboxSql,
 	}
 }
 
-func (e *OutboxRepository) CreateMany(
+func (e *outboxRepository) CreateMany(
 	ctx context.Context,
 	events ...commondomain.DomainEventI,
 ) error {
@@ -77,7 +78,7 @@ func (e *OutboxRepository) CreateMany(
 	return nil
 }
 
-func (e *OutboxRepository) GetNextEvent(ctx context.Context) (*outboxsql.EventOutbox, error) {
+func (e *outboxRepository) GetNextEvent(ctx context.Context) (*outboxsql.EventOutbox, error) {
 	event, err := e.outboxSql.ClaimNextEvent(ctx)
 	if err != nil {
 		switch {
@@ -90,10 +91,10 @@ func (e *OutboxRepository) GetNextEvent(ctx context.Context) (*outboxsql.EventOu
 	return &event, nil
 }
 
-func (e *OutboxRepository) RequeueEvent(ctx context.Context, id uuid.UUID) error {
+func (e *outboxRepository) RequeueEvent(ctx context.Context, id uuid.UUID) error {
 	return commondomain.WithTxFromCtx(e.outboxSql, ctx).RequeueEvent(ctx, id)
 }
 
-func (e *OutboxRepository) CompleteEvent(ctx context.Context, id uuid.UUID) error {
+func (e *outboxRepository) CompleteEvent(ctx context.Context, id uuid.UUID) error {
 	return commondomain.WithTxFromCtx(e.outboxSql, ctx).CompleteEvent(ctx, id)
 }

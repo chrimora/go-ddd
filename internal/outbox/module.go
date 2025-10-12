@@ -13,7 +13,7 @@ var CoreModule = fx.Module(
 	"outbox_core",
 	fx.Provide(
 		NewOutboxSql,
-		fx.Annotate(domain.NewOutboxRepository, fx.As(new(domain.OutboxRepositoryI))),
+		fx.Annotate(domain.NewOutboxRepository, fx.As(new(OutboxRepositoryI))),
 	),
 )
 

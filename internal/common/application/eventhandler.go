@@ -1,8 +1,9 @@
-package commondomain
+package commonapplication
 
 import (
 	"context"
 	"encoding/json"
+	commondomain "goddd/internal/common/domain"
 	"log/slog"
 	"reflect"
 
@@ -10,27 +11,27 @@ import (
 )
 
 // Implementations
-type EventHandler[T DomainEventI] interface {
+type EventHandler[T commondomain.DomainEventI] interface {
 	Handle(ctx context.Context, log *slog.Logger, event T) error
 }
 
 // Generic EventHandler for fx
 type EventHandlerInterface interface {
-	HandlerEventType() EventType
+	HandlerEventType() commondomain.EventType
 	Handle(ctx context.Context, payload []byte) error
 }
 
 // Adapter to fit EventHandler into EventHandlerInterface
-type EventHandlerAdapter[T DomainEventI] struct {
+type EventHandlerAdapter[T commondomain.DomainEventI] struct {
 	log     *slog.Logger
 	handler EventHandler[T]
 }
 
-func NewEventHandler[T DomainEventI](log *slog.Logger, handler EventHandler[T]) *EventHandlerAdapter[T] {
+func NewEventHandler[T commondomain.DomainEventI](log *slog.Logger, handler EventHandler[T]) *EventHandlerAdapter[T] {
 	return &EventHandlerAdapter[T]{log: log, handler: handler}
 }
 
-func (e *EventHandlerAdapter[T]) HandlerEventType() EventType {
+func (e *EventHandlerAdapter[T]) HandlerEventType() commondomain.EventType {
 	var t T
 	return t.GetEventType()
 }
@@ -54,8 +55,7 @@ func (e *EventHandlerAdapter[T]) Handle(ctx context.Context, payload []byte) err
 	return err
 }
 
-// _type is a hack to infer types
-func AsEventHandler[T DomainEventI, H EventHandler[T]](constructor any, _type H) fx.Option {
+func AsEventHandler[A any, T commondomain.DomainEventI, H EventHandler[T]](constructor func(A) H) fx.Option {
 	return fx.Options(
 		fx.Provide(constructor),
 		fx.Provide(fx.Annotate(

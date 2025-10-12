@@ -11,7 +11,15 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserRepository struct {
+type UserRepositoryI interface {
+	Get(context.Context, uuid.UUID) (*User, error)
+	Create(context.Context, *User) error
+	Update(context.Context, *User) error
+	Remove(context.Context, *User) error
+}
+
+type UserRepository UserRepositoryI
+type userRepository struct {
 	log     *slog.Logger
 	userSql *usersql.Queries
 }
@@ -19,14 +27,14 @@ type UserRepository struct {
 func NewUserRepository(
 	log *slog.Logger,
 	userSql *usersql.Queries,
-) *UserRepository {
-	return &UserRepository{
+) UserRepository {
+	return &userRepository{
 		log:     log,
 		userSql: userSql,
 	}
 }
 
-func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
+func (u *userRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 	user, err := u.userSql.GetUser(ctx, id)
 	if err != nil {
 		switch {
@@ -43,7 +51,7 @@ func (u *UserRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 		Name: user.Name,
 	}, nil
 }
-func (u *UserRepository) Create(ctx context.Context, user *User) error {
+func (u *userRepository) Create(ctx context.Context, user *User) error {
 	_, err := commondomain.WithTxFromCtx(u.userSql, ctx).CreateUser(
 		ctx,
 		usersql.CreateUserParams{
@@ -57,7 +65,7 @@ func (u *UserRepository) Create(ctx context.Context, user *User) error {
 	return err
 }
 
-func (u *UserRepository) Update(ctx context.Context, user *User) error {
+func (u *userRepository) Update(ctx context.Context, user *User) error {
 	_, err := commondomain.WithTxFromCtx(u.userSql, ctx).UpdateUser(
 		ctx,
 		usersql.UpdateUserParams{
@@ -78,6 +86,6 @@ func (u *UserRepository) Update(ctx context.Context, user *User) error {
 	return err
 }
 
-func (u *UserRepository) Remove(ctx context.Context, user *User) error {
+func (u *userRepository) Remove(ctx context.Context, user *User) error {
 	return commondomain.WithTxFromCtx(u.userSql, ctx).RemoveUser(ctx, user.ID)
 }

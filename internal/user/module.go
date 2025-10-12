@@ -1,7 +1,7 @@
 package user
 
 import (
-	"goddd/internal/common/domain"
+	"goddd/internal/common/application"
 	"goddd/internal/common/infrastructure/sql"
 	"goddd/internal/common/interfaces/rest"
 	"goddd/internal/user/application"
@@ -17,7 +17,7 @@ var CoreModule = fx.Module(
 	"user_core",
 	fx.Provide(
 		NewUserSql,
-		fx.Annotate(domain.NewUserRepository, fx.As(new(application.UserRepositoryI))),
+		fx.Annotate(domain.NewUserRepository, fx.As(new(domain.UserRepositoryI))),
 		fx.Annotate(application.NewUserService, fx.As(new(application.UserServiceI))),
 	),
 )
@@ -33,8 +33,8 @@ var ServerModule = fx.Module(
 var WorkerModule = fx.Module(
 	"user_worker",
 	CoreModule,
-	commondomain.AsEventHandler(eventhandlers.NewUserCreatedHandler, &eventhandlers.UserCreatedHandler{}),
-	commondomain.AsEventHandler(eventhandlers.NewUserCreatedHandler2, &eventhandlers.UserCreatedHandler2{}),
+	commonapplication.AsEventHandler(eventhandlers.NewUserCreatedHandler),
+	commonapplication.AsEventHandler(eventhandlers.NewUserCreatedHandler2),
 )
 
 func NewUserSql(db commonsql.DBTX) *sql.Queries {

@@ -45,3 +45,8 @@ Then run:
 - `task sqlgen`
 - `task migrate`
 
+# TODO
+
+- CQRS
+- Publish events to SQS
+

@@ -10,13 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserRepositoryI interface {
-	Get(context.Context, uuid.UUID) (*domain.User, error)
-	Create(context.Context, *domain.User) error
-	Update(context.Context, *domain.User) error
-	Remove(context.Context, *domain.User) error
-}
-
 // TODO; split
 // - Read: UserQueriesI
 // - Write: UserCommandsI
@@ -26,20 +19,21 @@ type UserServiceI interface {
 	Update(context.Context, uuid.UUID, string) error
 }
 
-type UserService struct {
+type UserService UserServiceI
+type userService struct {
 	log        *slog.Logger
 	txManager  *commondomain.TxManager
 	outboxRepo outbox.OutboxRepositoryI
-	userRepo   UserRepositoryI
+	userRepo   domain.UserRepositoryI
 }
 
 func NewUserService(
 	log *slog.Logger,
 	txManager *commondomain.TxManager,
 	outboxRepo outbox.OutboxRepositoryI,
-	userRepo UserRepositoryI,
-) *UserService {
-	return &UserService{
+	userRepo domain.UserRepositoryI,
+) UserService {
+	return &userService{
 		log:        log,
 		txManager:  txManager,
 		outboxRepo: outboxRepo,
@@ -47,13 +41,13 @@ func NewUserService(
 	}
 }
 
-func (u *UserService) Get(ctx context.Context, id uuid.UUID) (*domain.User, error) {
+func (u *userService) Get(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	user, err := u.userRepo.Get(ctx, id)
 	u.log.InfoContext(ctx, "Got", "user", user)
 	return user, err
 }
 
-func (u *UserService) Create(ctx context.Context, name string) (uuid.UUID, error) {
+func (u *userService) Create(ctx context.Context, name string) (uuid.UUID, error) {
 	user := domain.NewUser(name)
 	u.log.InfoContext(ctx, "Creating", "user", user)
 
@@ -68,7 +62,7 @@ func (u *UserService) Create(ctx context.Context, name string) (uuid.UUID, error
 	return user.ID, err
 }
 
-func (u *UserService) Update(ctx context.Context, id uuid.UUID, name string) error {
+func (u *userService) Update(ctx context.Context, id uuid.UUID, name string) error {
 	user, err := u.userRepo.Get(ctx, id)
 	if err != nil {
 		return err

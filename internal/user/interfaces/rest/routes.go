@@ -11,19 +11,22 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-type UserRoutes struct {
-	log         *slog.Logger
-	userService application.UserServiceI
-}
+type (
+	UserRoutes commonrest.RouteCollection
+	userRoutes struct {
+		log         *slog.Logger
+		userService application.UserServiceI
+	}
+)
 
-func NewUserRoutes(log *slog.Logger, userService application.UserServiceI) *UserRoutes {
-	return &UserRoutes{
+func NewUserRoutes(log *slog.Logger, userService application.UserServiceI) UserRoutes {
+	return &userRoutes{
 		log:         log,
 		userService: userService,
 	}
 }
 
-func (u *UserRoutes) Register(api huma.API) {
+func (u *userRoutes) Register(api huma.API) {
 	huma.Get(api, "/user/{id}", u.get)
 	huma.Post(api, "/user", u.create)
 	huma.Put(api, "/user/{id}", u.update)
@@ -41,7 +44,7 @@ type UserResponse struct {
 	Name string `json:"name"`
 }
 
-func (u *UserRoutes) get(
+func (u *userRoutes) get(
 	ctx context.Context, req *commonrest.IdParam,
 ) (*commonrest.Response[UserResponse], error) {
 	user, err := u.userService.Get(ctx, req.ID)
@@ -59,7 +62,7 @@ func (u *UserRoutes) get(
 	return commonrest.BuildResponse(res), nil
 }
 
-func (u *UserRoutes) create(
+func (u *userRoutes) create(
 	ctx context.Context, req *commonrest.CreateRequest[UserCreatePayload],
 ) (*commonrest.Response[commonrest.IdPayload], error) {
 	id, err := u.userService.Create(ctx, req.Body.Name)
@@ -70,7 +73,7 @@ func (u *UserRoutes) create(
 	return commonrest.BuildResponse(res), nil
 }
 
-func (u *UserRoutes) update(
+func (u *userRoutes) update(
 	ctx context.Context, req *commonrest.UpdateRequest[UserUpdatePayload],
 ) (*commonrest.EmptyResponse, error) {
 	err := u.userService.Update(ctx, req.ID, req.Body.Name)
