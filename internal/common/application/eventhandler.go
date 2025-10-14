@@ -6,6 +6,7 @@ import (
 	commondomain "goddd/internal/common/domain"
 	"log/slog"
 	"reflect"
+	"time"
 
 	"go.uber.org/fx"
 )
@@ -17,8 +18,9 @@ type EventHandler[T commondomain.DomainEventI] interface {
 
 // Generic EventHandler for fx
 type EventHandlerInterface interface {
-	HandlerEventType() commondomain.EventType
-	Handle(ctx context.Context, payload []byte) error
+	GetName() string
+	GetType() commondomain.EventType
+	Handle(ctx context.Context, id string, payload []byte) error
 }
 
 // Adapter to fit EventHandler into EventHandlerInterface
@@ -31,25 +33,29 @@ func NewEventHandler[T commondomain.DomainEventI](log *slog.Logger, handler Even
 	return &EventHandlerAdapter[T]{log: log, handler: handler}
 }
 
-func (e *EventHandlerAdapter[T]) HandlerEventType() commondomain.EventType {
+func (e *EventHandlerAdapter[T]) GetName() string {
+	return reflect.TypeOf(e.handler).Elem().Name()
+}
+func (e *EventHandlerAdapter[T]) GetType() commondomain.EventType {
 	var t T
 	return t.GetEventType()
 }
-func (e *EventHandlerAdapter[T]) Handle(ctx context.Context, payload []byte) error {
-	// TODO; handlers do not respect ctx cancel
-	// Wrap in a transaction ctx and check ctx.Done() before commit
-
+func (e *EventHandlerAdapter[T]) Handle(ctx context.Context, id string, payload []byte) error {
 	var event T
 	err := json.Unmarshal(payload, &event)
 	if err != nil {
 		return err
 	}
 
-	log := e.log.With("handler", reflect.TypeOf(e.handler).Elem().Name())
-	log.InfoContext(ctx, "Event handler start")
+	log := e.log.With("handler", e.GetName(), "event_id", id)
+	log.InfoContext(ctx, "EventHandler start")
+
+	start := time.Now()
 	err = e.handler.Handle(ctx, log, event)
 	if err != nil {
-		log.ErrorContext(ctx, "Event handler error", "err", err)
+		log.ErrorContext(ctx, "EventHandler error", "err", err)
+	} else {
+		log.InfoContext(ctx, "EventHandler complete", "duration", time.Since(start))
 	}
 
 	return err

@@ -26,8 +26,8 @@ func (h *userCreatedHandler) Handle(
 	event domain.UserCreatedEvent,
 ) error {
 	// Simulate work
-	log.InfoContext(ctx, "Doing stuff!")
 	time.Sleep(1 * time.Second)
+	log.InfoContext(ctx, "Stuff done!")
 
 	return nil
 }
@@ -48,8 +48,8 @@ func (h *userCreatedHandler2) Handle(
 	event domain.UserCreatedEvent,
 ) error {
 	// Simulate work
-	log.InfoContext(ctx, "Doing stuff!")
 	time.Sleep(1 * time.Second)
+	log.InfoContext(ctx, "Stuff done!")
 
 	return nil
 }

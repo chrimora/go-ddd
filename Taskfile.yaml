@@ -16,10 +16,10 @@ tasks:
     cmds:
       - go run cmd/server/main.go
 
-  worker:
-    desc: Run the worker locally
+  consumer:
+    desc: Run the consumer locally
     cmds:
-      - go run cmd/worker/main.go
+      - go run cmd/consumer/main.go
 
   sqlgen:
     desc: Generate sqlc pkgs

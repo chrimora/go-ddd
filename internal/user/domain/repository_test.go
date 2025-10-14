@@ -5,7 +5,7 @@ package domain_test
 import (
 	"context"
 	"goddd/internal/common/domain"
-	"goddd/internal/user/application"
+	"goddd/internal/user/domain"
 	"goddd/internal/user/test"
 	"testing"
 
@@ -18,8 +18,8 @@ import (
 type UserSuite struct {
 	suite.Suite
 	app  *fx.App
-	uf   *test.UserFactory
-	repo application.UserRepositoryI
+	uf   test.UserFactory
+	repo domain.UserRepositoryI
 }
 
 func (s *UserSuite) SetupSuite() {

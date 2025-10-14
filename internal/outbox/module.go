@@ -4,8 +4,10 @@ import (
 	"goddd/internal/common/infrastructure/sql"
 	"goddd/internal/outbox/application"
 	"goddd/internal/outbox/domain"
+	"goddd/internal/outbox/infrastructure/pubsub"
 	"goddd/internal/outbox/infrastructure/sql"
 
+	"github.com/ThreeDotsLabs/watermill/message"
 	"go.uber.org/fx"
 )
 
@@ -22,12 +24,15 @@ var ServerModule = fx.Module(
 	CoreModule,
 )
 
-var WorkerModule = fx.Module(
-	"outbox_worker",
+var ConsumerModule = fx.Module(
+	"outbox_consumer",
 	CoreModule,
 	fx.Provide(
-		fx.Annotate(application.NewDispatcher, fx.ParamTags(`group:"eventHandlers"`)),
-		application.NewWorker,
+		fx.Annotate(pubsub.NewGoChannel, fx.As(new(message.Publisher)), fx.As(new(message.Subscriber))),
+		fx.Annotate(application.NewEventPublisher, fx.As(new(application.EventPublisherI))),
+		pubsub.NewRouter,
+		application.NewForwarder,
+		fx.Annotate(application.NewConsumer, fx.ParamTags(`group:"eventHandlers"`)),
 	),
 )
 

@@ -16,7 +16,7 @@ func main() {
 	fx.New(
 		fx.Supply(service),
 		common.ServerModule,
-		config.Module,
+		config.ServerModule,
 		outbox.ServerModule,
 		user.ServerModule,
 		fx.Invoke(func(*http.Server, *huma.API) {}),

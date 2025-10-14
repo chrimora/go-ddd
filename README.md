@@ -2,7 +2,7 @@
 
 Simple DDD template for Go.
 
-Vertical layered web service + async worker.
+Vertical layered web service + async event consumer.
 
 - Infra
   - Docker compose DB
@@ -12,9 +12,11 @@ Vertical layered web service + async worker.
 - Code
   - Environment config - env & dotenv
   - Contextual logging - slog
-  - Open API gen & request validation - Huma
   - Dependency injection - fx
+  - Open API gen & request validation - Huma
   - Repository implementation - sqlc
+  - Transactional event outbox
+  - Event pubsub - watermill
 
 ## Requirements
 
@@ -29,7 +31,7 @@ Vertical layered web service + async worker.
 
 - `task infra`
 - `task server`
-- `task worker`
+- `task consumer`
 
 Checkout http://localhost:8080/docs
 
@@ -48,5 +50,5 @@ Then run:
 # TODO
 
 - CQRS
-- Publish events to SQS
+- SQS pubsub
 

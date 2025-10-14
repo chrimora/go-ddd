@@ -32,3 +32,8 @@ var ServerModule = fx.Module(
 		),
 	),
 )
+
+var ConsumerModule = fx.Module(
+	"common_consumer",
+	CoreModule,
+)

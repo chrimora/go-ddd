@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"goddd/internal/common/domain"
+	"goddd/internal/config"
 	"goddd/internal/outbox/domain"
 	"log/slog"
 	"time"
@@ -10,81 +11,78 @@ import (
 	"go.uber.org/fx"
 )
 
-const RetriesCutoff = 5
-const PublisherBatchSize = 10
-const PublisherBackoff = 300 * time.Millisecond
-const WatchdogTick = 3 * time.Second
-const WatchdogStaleLimit = 3 * time.Second
-
-type Worker struct {
+type DomainEventForwarder struct {
 	log        *slog.Logger
 	txManager  *commondomain.TxManager
 	outboxRepo domain.OutboxRepositoryI
-	dispatch   *Dispatcher
+	cfg        *config.ForwarderConfig
+	publisher  EventPublisherI
 
 	ticker *time.Ticker
 	cancel context.CancelFunc
 }
 
-func NewWorker(
+func NewForwarder(
 	lc fx.Lifecycle,
 	log *slog.Logger,
 	txManager *commondomain.TxManager,
 	outboxRepo domain.OutboxRepositoryI,
-	dispatch *Dispatcher,
-) *Worker {
+	cfg *config.ForwarderConfig,
+	publisher EventPublisherI,
+) *DomainEventForwarder {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	worker := &Worker{
+	forwarder := &DomainEventForwarder{
 		log:        log,
 		txManager:  txManager,
 		outboxRepo: outboxRepo,
-		dispatch:   dispatch,
-		ticker:     time.NewTicker(WatchdogTick),
+		cfg:        cfg,
+		publisher:  publisher,
+		ticker:     time.NewTicker(cfg.WatchdogTick),
 		cancel:     cancel,
 	}
 
 	lc.Append(fx.Hook{
 		OnStart: func(_ context.Context) error {
-			go worker.RunPublisher(ctx)
-			go worker.RunWatchdog(ctx)
+			go forwarder.RunPublisher(ctx)
+			go forwarder.RunWatchdog(ctx)
 			return nil
 		},
 		OnStop: func(_ context.Context) error {
-			worker.Stop()
+			forwarder.Stop()
 			return nil
 		},
 	})
-	return worker
+	return forwarder
 }
 
-func (w *Worker) RunPublisher(ctx context.Context) {
-	w.log.Info("Worker publisher start")
+func (w *DomainEventForwarder) RunPublisher(ctx context.Context) {
+	w.log.Info("Forwarder publisher start")
 	for {
 		select {
 		case <-ctx.Done():
-			// Cancelled
+			w.log.Info("Forwarder publisher stopped")
 			return
 		default:
 			has_published := w.publishBatch(ctx)
 			if !has_published {
-				time.Sleep(PublisherBackoff)
+				time.Sleep(w.cfg.PublisherSleep)
 			}
 		}
 	}
 }
-func (w *Worker) RunWatchdog(ctx context.Context) {
-	w.log.Info("Worker watchdog start")
+func (w *DomainEventForwarder) RunWatchdog(ctx context.Context) {
+	w.log.Info("Forwarder watchdog start")
 	for {
 		select {
 		case <-ctx.Done():
-			// Cancelled
+			w.log.Info("Forwarder watchdog stopped")
 			return
 		case <-w.ticker.C:
-			t := time.Now().UTC().Add(-WatchdogStaleLimit)
-			count, err := w.outboxRepo.RequeueStaleEvents(ctx, t, RetriesCutoff)
+			t := time.Now().UTC().Add(-w.cfg.WatchdogStaleLimit)
+			count, err := w.outboxRepo.RequeueStaleEvents(ctx, t, w.cfg.MaxRetries)
 			if count > 0 {
-				w.log.Warn("StaleEvents", "count", count)
+				w.log.Warn("StaleEvent count", "count", count)
 			}
 			if err != nil {
 				w.log.Error("StaleEvent requeue error", "err", err)
@@ -93,16 +91,15 @@ func (w *Worker) RunWatchdog(ctx context.Context) {
 	}
 }
 
-func (w *Worker) Stop() {
-	w.log.Info("Worker stopping")
+func (w *DomainEventForwarder) Stop() {
 	w.ticker.Stop()
 	w.cancel()
 }
 
-func (w *Worker) publishBatch(ctx context.Context) bool {
+func (w *DomainEventForwarder) publishBatch(ctx context.Context) bool {
 	var events []*domain.OutboxEvent
 	err := w.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
-		e, err := w.outboxRepo.GetNextEventBatch(txCtx, PublisherBatchSize, RetriesCutoff)
+		e, err := w.outboxRepo.GetNextEventBatch(txCtx, w.cfg.PublisherBatchSize, w.cfg.MaxRetries)
 		events = e
 		return err
 	})
@@ -117,11 +114,14 @@ func (w *Worker) publishBatch(ctx context.Context) bool {
 	for _, event := range events {
 		log := w.log.With("event", event)
 
-		// TODO; publish
+		err := w.publisher.Publish(ctx, event)
+		if err != nil {
+			log.Error("Event publish error", "err", err)
+		}
 
 		err = w.outboxRepo.CompleteEvent(ctx, event.ID)
 		if err != nil {
-			log.Error("Error completing event", "err", err)
+			log.Error("Event complete error", "err", err)
 		}
 	}
 	return true

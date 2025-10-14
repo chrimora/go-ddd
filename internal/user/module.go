@@ -30,8 +30,8 @@ var ServerModule = fx.Module(
 	),
 )
 
-var WorkerModule = fx.Module(
-	"user_worker",
+var ConsumerModule = fx.Module(
+	"user_consumer",
 	CoreModule,
 	commonapplication.AsEventHandler(eventhandlers.NewUserCreatedHandler),
 	commonapplication.AsEventHandler(eventhandlers.NewUserCreatedHandler2),

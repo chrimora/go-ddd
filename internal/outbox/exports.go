@@ -6,6 +6,7 @@ import (
 )
 
 type (
-	Worker            = application.Worker
-	OutboxRepositoryI = domain.OutboxRepositoryI
+	DomainEventForwarder = application.DomainEventForwarder
+	Consumer             = application.Consumer
+	OutboxRepositoryI    = domain.OutboxRepositoryI
 )

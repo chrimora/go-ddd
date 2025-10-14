@@ -36,7 +36,7 @@ func (e *outboxRepository) CreateMany(
 	ctx context.Context,
 	events ...commondomain.DomainEventI,
 ) error {
-	traceContext := infrastructure.NewTraceCtx(ctx)
+	traceContext := infrastructure.NewTraceCtxFromCtx(ctx)
 	err := traceContext.IsComplete()
 	if err != nil {
 		return err

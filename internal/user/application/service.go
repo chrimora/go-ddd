@@ -10,9 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// TODO; split
-// - Read: UserQueriesI
-// - Write: UserCommandsI
 type UserServiceI interface {
 	Get(context.Context, uuid.UUID) (*domain.User, error)
 	Create(context.Context, string) (uuid.UUID, error)

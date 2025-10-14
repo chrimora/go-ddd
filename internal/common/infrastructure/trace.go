@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
+	"github.com/ThreeDotsLabs/watermill/message"
 )
 
 const (
@@ -19,7 +21,7 @@ type TraceContext struct {
 
 var ErrBadContext = errors.New("bad trace context")
 
-func NewTraceCtx(ctx context.Context) (tc TraceContext) {
+func NewTraceCtxFromCtx(ctx context.Context) (tc TraceContext) {
 	requestId, ok := ctx.Value(RequestIdKey).(string)
 	if ok {
 		tc.RequestId = requestId
@@ -30,6 +32,18 @@ func NewTraceCtx(ctx context.Context) (tc TraceContext) {
 	}
 	return tc
 }
+
+func NewTraceCtxFromJson(ctx []byte) (tc TraceContext, err error) {
+	return tc, json.Unmarshal(ctx, &tc)
+}
+
+func NewTraceCtxFromMessage(metadata message.Metadata) TraceContext {
+	return TraceContext{
+		RequestId: metadata.Get(RequestIdKey),
+		UserId:    metadata.Get(UserIdKey),
+	}
+}
+
 func (tc *TraceContext) IsComplete() error {
 	if tc.RequestId == "" {
 		return fmt.Errorf("%w: %s", ErrBadContext, RequestIdKey)
@@ -40,15 +54,8 @@ func (tc *TraceContext) IsComplete() error {
 	return nil
 }
 
-func JsonToCtx(jsonCtx []byte, ctx context.Context) context.Context {
-	var trace TraceContext
-	err := json.Unmarshal(jsonCtx, &trace)
-	if err != nil {
-		// TODO; shouldnt happen
-		return ctx
-	}
-
-	ctx = context.WithValue(ctx, RequestIdKey, trace.RequestId)
-	ctx = context.WithValue(ctx, UserIdKey, trace.UserId)
+func (tc *TraceContext) ToCtx(ctx context.Context) context.Context {
+	ctx = context.WithValue(ctx, RequestIdKey, tc.RequestId)
+	ctx = context.WithValue(ctx, UserIdKey, tc.UserId)
 	return ctx
 }
