@@ -11,13 +11,12 @@ import (
 )
 
 type (
-	UserCreatedHandlerParams struct{ fx.In }
-	UserCreatedHandler       commonapplication.EventHandler[domain.UserCreatedEvent]
-	userCreatedHandler       struct{}
+	UserCreatedHandler commonapplication.EventHandler[domain.UserCreatedEvent]
+	userCreatedHandler struct{ fx.In }
 )
 
-func NewUserCreatedHandler(p UserCreatedHandlerParams) UserCreatedHandler {
-	return &userCreatedHandler{}
+func NewUserCreatedHandler(p userCreatedHandler) UserCreatedHandler {
+	return &p
 }
 
 func (h *userCreatedHandler) Handle(
@@ -33,13 +32,12 @@ func (h *userCreatedHandler) Handle(
 }
 
 type (
-	UserCreatedHandlerParams2 struct{ fx.In }
-	UserCreatedHandler2       commonapplication.EventHandler[domain.UserCreatedEvent]
-	userCreatedHandler2       struct{}
+	UserCreatedHandler2 commonapplication.EventHandler[domain.UserCreatedEvent]
+	userCreatedHandler2 struct{ fx.In }
 )
 
-func NewUserCreatedHandler2(p UserCreatedHandlerParams2) UserCreatedHandler2 {
-	return &userCreatedHandler2{}
+func NewUserCreatedHandler2(p userCreatedHandler2) UserCreatedHandler2 {
+	return &p
 }
 
 func (h *userCreatedHandler2) Handle(

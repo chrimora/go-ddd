@@ -16,7 +16,7 @@ type EventHandler[T commondomain.DomainEventI] interface {
 	Handle(ctx context.Context, log *slog.Logger, event T) error
 }
 
-// Generic EventHandler for fx
+// Generic Interface for fx
 type EventHandlerInterface interface {
 	GetName() string
 	GetType() commondomain.EventType

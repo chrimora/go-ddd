@@ -5,7 +5,8 @@ import (
 	"errors"
 	"goddd/internal/common/domain"
 	"goddd/internal/common/interfaces/rest"
-	"goddd/internal/user/application"
+	"goddd/internal/user/application/commands"
+	"goddd/internal/user/application/queries"
 	"log/slog"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -14,15 +15,24 @@ import (
 type (
 	UserRoutes commonrest.RouteCollection
 	userRoutes struct {
-		log         *slog.Logger
-		userService application.UserServiceI
+		log        *slog.Logger
+		getUser    queries.GetUserQuery
+		createUser commands.CreateUserCommand
+		updateUser commands.UpdateUserCommand
 	}
 )
 
-func NewUserRoutes(log *slog.Logger, userService application.UserServiceI) UserRoutes {
+func NewUserRoutes(
+	log *slog.Logger,
+	getUser queries.GetUserQuery,
+	createUser commands.CreateUserCommand,
+	updateUser commands.UpdateUserCommand,
+) UserRoutes {
 	return &userRoutes{
-		log:         log,
-		userService: userService,
+		log:        log,
+		getUser:    getUser,
+		createUser: createUser,
+		updateUser: updateUser,
 	}
 }
 
@@ -47,7 +57,7 @@ type UserResponse struct {
 func (u *userRoutes) get(
 	ctx context.Context, req *commonrest.IdParam,
 ) (*commonrest.Response[UserResponse], error) {
-	user, err := u.userService.Get(ctx, req.ID)
+	user, err := u.getUser.Handle(ctx, queries.GetUserInput{Id: req.ID})
 	if err != nil {
 		switch {
 		case errors.Is(err, commondomain.ErrNotFound):
@@ -65,7 +75,7 @@ func (u *userRoutes) get(
 func (u *userRoutes) create(
 	ctx context.Context, req *commonrest.CreateRequest[UserCreatePayload],
 ) (*commonrest.Response[commonrest.IdPayload], error) {
-	id, err := u.userService.Create(ctx, req.Body.Name)
+	id, err := u.createUser.Handle(ctx, commands.CreateUserInput{Name: req.Body.Name})
 	if err != nil {
 		return nil, commonrest.UnexpectedErrorResponse(u.log, ctx, err)
 	}
@@ -76,7 +86,7 @@ func (u *userRoutes) create(
 func (u *userRoutes) update(
 	ctx context.Context, req *commonrest.UpdateRequest[UserUpdatePayload],
 ) (*commonrest.EmptyResponse, error) {
-	err := u.userService.Update(ctx, req.ID, req.Body.Name)
+	_, err := u.updateUser.Handle(ctx, commands.UpdateUserInput{Id: req.ID, Name: req.Body.Name})
 	if err != nil {
 		switch {
 		case errors.Is(err, commondomain.ErrNotFound):

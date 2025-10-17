@@ -4,8 +4,9 @@ import (
 	"goddd/internal/common/application"
 	"goddd/internal/common/infrastructure/sql"
 	"goddd/internal/common/interfaces/rest"
-	"goddd/internal/user/application"
+	"goddd/internal/user/application/commands"
 	"goddd/internal/user/application/eventhandlers"
+	"goddd/internal/user/application/queries"
 	"goddd/internal/user/domain"
 	"goddd/internal/user/infrastructure/sql"
 	"goddd/internal/user/interfaces/rest"
@@ -18,7 +19,9 @@ var CoreModule = fx.Module(
 	fx.Provide(
 		NewUserSql,
 		fx.Annotate(domain.NewUserRepository, fx.As(new(domain.UserRepositoryI))),
-		fx.Annotate(application.NewUserService, fx.As(new(application.UserServiceI))),
+		queries.NewGetUserQuery,
+		commands.NewCreateUserCommand,
+		commands.NewUpdateUserCommand,
 	),
 )
 

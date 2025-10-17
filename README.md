@@ -49,6 +49,5 @@ Then run:
 
 # TODO
 
-- CQRS
 - SQS pubsub
 
