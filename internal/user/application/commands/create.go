@@ -49,5 +49,5 @@ func (u *createUser) Handle(
 		}
 		return u.outboxRepo.CreateMany(txCtx, user.PullEvents()...)
 	})
-	return user.ID, err
+	return user.ID(), err
 }

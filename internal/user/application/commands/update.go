@@ -42,7 +42,7 @@ func (u *updateUser) Handle(
 ) (uuid.UUID, error) {
 	user, err := u.userRepo.Get(ctx, input.Id)
 	if err != nil {
-		return user.ID, err
+		return user.ID(), err
 	}
 
 	user.Update(input.Name)
@@ -55,5 +55,5 @@ func (u *updateUser) Handle(
 		}
 		return u.outboxRepo.CreateMany(txCtx, user.PullEvents()...)
 	})
-	return user.ID, err
+	return user.ID(), err
 }

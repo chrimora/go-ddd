@@ -41,9 +41,9 @@ func TestUserSuite(t *testing.T) {
 func (s *UserSuite) TestGet() {
 	user := s.uf.Mock(s.T(), map[string]any{"Name": "Chris"})
 
-	user, err := s.repo.Get(context.Background(), user.ID)
+	user, err := s.repo.Get(context.Background(), user.ID())
 	require.NoError(s.T(), err)
-	assert.Equal(s.T(), "Chris", user.Name)
+	assert.Equal(s.T(), "Chris", user.Name())
 }
 
 func (s *UserSuite) TestRaceCondition() {
@@ -58,7 +58,7 @@ func (s *UserSuite) TestRaceCondition() {
 	err = s.repo.Update(ctx, user)
 	assert.ErrorIs(s.T(), err, commondomain.ErrRaceCondition)
 
-	user, err = s.repo.Get(ctx, user.ID)
+	user, err = s.repo.Get(ctx, user.ID())
 	require.NoError(s.T(), err)
-	assert.Equal(s.T(), "Terry", user.Name)
+	assert.Equal(s.T(), "Terry", user.Name())
 }

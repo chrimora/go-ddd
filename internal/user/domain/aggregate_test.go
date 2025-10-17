@@ -1,6 +1,7 @@
-package domain
+package domain_test
 
 import (
+	"goddd/internal/user/domain"
 	"testing"
 	"time"
 
@@ -9,16 +10,16 @@ import (
 
 func TestNewUser(t *testing.T) {
 	name := "Alice"
-	user := NewUser(name)
+	user := domain.NewUser(name)
 
 	assert.NotNil(t, user)
 	assert.NotEmpty(t, user.ID)
-	assert.Equal(t, name, user.Name)
+	assert.Equal(t, name, user.Name())
 }
 
 func TestUserUpdate(t *testing.T) {
-	user := NewUser("Bob")
-	oldUpdatedAt := user.UpdatedAt
+	user := domain.NewUser("Bob")
+	oldUpdatedAt := user.UpdatedAt()
 
 	// Ensure time difference
 	time.Sleep(3 * time.Millisecond)
@@ -26,6 +27,6 @@ func TestUserUpdate(t *testing.T) {
 	newName := "Robert"
 	user.Update(newName)
 
-	assert.Equal(t, newName, user.Name)
-	assert.Greater(t, user.UpdatedAt, oldUpdatedAt)
+	assert.Equal(t, newName, user.Name())
+	assert.Greater(t, user.UpdatedAt(), oldUpdatedAt)
 }

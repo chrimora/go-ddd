@@ -10,24 +10,31 @@ type AggregateRootI interface {
 	PullEvents() []DomainEventI
 }
 type AggregateRoot struct {
-	ID        uuid.UUID
+	id        uuid.UUID
 	version   int
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	createdAt time.Time
+	updatedAt time.Time
 	events    []DomainEventI
 }
 
 func NewAggregateRoot() AggregateRoot {
 	t := time.Now().UTC()
-	return AggregateRoot{ID: uuid.New(), version: 1, CreatedAt: t, UpdatedAt: t}
+	return AggregateRoot{id: uuid.New(), version: 0, createdAt: t, updatedAt: t}
+}
+func RehydrateAggregateRoot(
+	id uuid.UUID, version int, createdAt, updatedAt time.Time,
+) AggregateRoot {
+	return AggregateRoot{id: id, version: version, createdAt: createdAt, updatedAt: updatedAt}
 }
 
-func NewAggregateRootFromFields(id uuid.UUID, version int, createdAt, updatedAt time.Time) AggregateRoot {
-	return AggregateRoot{ID: id, version: version, CreatedAt: createdAt, UpdatedAt: updatedAt}
-}
+// Getters
+func (r *AggregateRoot) ID() uuid.UUID        { return r.id }
+func (r *AggregateRoot) Version() int         { return r.version }
+func (r *AggregateRoot) CreatedAt() time.Time { return r.createdAt }
+func (r *AggregateRoot) UpdatedAt() time.Time { return r.updatedAt }
 
-func (r *AggregateRoot) GetVersion() int {
-	return r.version
+func (r *AggregateRoot) Update() {
+	r.updatedAt = time.Now().UTC()
 }
 func (r *AggregateRoot) AddEvent(event DomainEventI) {
 	r.events = append(r.events, event)

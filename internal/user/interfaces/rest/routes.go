@@ -67,8 +67,8 @@ func (u *userRoutes) get(
 		}
 	}
 	res := UserResponse{}
-	res.ID = user.ID
-	res.Name = user.Name
+	res.ID = user.ID()
+	res.Name = user.Name()
 	return commonrest.BuildResponse(res), nil
 }
 
