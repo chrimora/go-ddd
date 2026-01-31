@@ -15,7 +15,6 @@ var CoreModule = fx.Module(
 		commoninfrastructure.NewLogger,
 		commonsql.NewContext,
 		commonsql.NewDBPool,
-		commondomain.NewTxFactory,
 		commondomain.NewTxManager,
 	),
 )

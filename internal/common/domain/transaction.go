@@ -7,26 +7,16 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type TxFactory func(context.Context) (pgx.Tx, error)
-
-func NewTxFactory(db commonsql.DBTX) TxFactory {
-	return func(ctx context.Context) (pgx.Tx, error) {
-		return db.Begin(ctx)
-	}
-}
-
 type TxManager struct {
-	txFactory TxFactory
+	db commonsql.DBTX
 }
 
-func NewTxManager(txFactory TxFactory) *TxManager {
-	return &TxManager{txFactory: txFactory}
+func NewTxManager(db commonsql.DBTX) *TxManager {
+	return &TxManager{db: db}
 }
 
-type TxFunc func(tx pgx.Tx) error
-
-func (m *TxManager) WithTx(ctx context.Context, fn TxFunc) error {
-	tx, err := m.txFactory(ctx)
+func (m *TxManager) WithTx(ctx context.Context, fn func(tx pgx.Tx) error) error {
+	tx, err := m.db.Begin(ctx)
 	if err != nil {
 		return err
 	}

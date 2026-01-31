@@ -5,6 +5,7 @@ package domain_test
 import (
 	"context"
 	"goddd/internal/common/domain"
+	commontest "goddd/internal/common/test"
 	"goddd/internal/user/domain"
 	"goddd/internal/user/test"
 	"testing"
@@ -42,16 +43,17 @@ func TestUserSuite(t *testing.T) {
 }
 
 func (s *UserSuite) TestGet() {
-	user := s.uf.Mock(s.T(), map[string]any{"Name": "Chris"})
+	ctx := commontest.TestContext()
+	user := s.uf.Mock(s.T(), ctx, map[string]any{"Name": "Chris"})
 
-	user, err := s.repo.Get(context.Background(), user.ID())
+	user, err := s.repo.Get(ctx, user.ID())
 	require.NoError(s.T(), err)
 	assert.Equal(s.T(), "Chris", user.Name())
 }
 
 func (s *UserSuite) TestRaceCondition() {
-	ctx := context.Background()
-	user := s.uf.Mock(s.T())
+	ctx := commontest.TestContext()
+	user := s.uf.Mock(s.T(), ctx)
 
 	user.Update("Terry")
 	err := s.txManager.WithTx(ctx, func(tx pgx.Tx) error {

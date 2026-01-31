@@ -4,7 +4,6 @@ import (
 	"context"
 	commonapplication "goddd/internal/common/application"
 	commondomain "goddd/internal/common/domain"
-	"goddd/internal/outbox"
 	"goddd/internal/user/domain"
 	"log/slog"
 
@@ -22,20 +21,17 @@ type UpdateUserCommand commonapplication.CommandI[UpdateUserInput]
 func NewUpdateUserCommand(
 	log *slog.Logger,
 	txManager *commondomain.TxManager,
-	outboxRepo outbox.OutboxRepositoryI,
 	userRepo domain.UserRepositoryI,
 ) UpdateUserCommand {
 	return commonapplication.NewCommand(log, &updateUser{
-		txManager:  txManager,
-		outboxRepo: outboxRepo,
-		userRepo:   userRepo,
+		txManager: txManager,
+		userRepo:  userRepo,
 	})
 }
 
 type updateUser struct {
-	txManager  *commondomain.TxManager
-	outboxRepo outbox.OutboxRepositoryI
-	userRepo   domain.UserRepositoryI
+	txManager *commondomain.TxManager
+	userRepo  domain.UserRepositoryI
 }
 
 func (u *updateUser) Handle(
@@ -50,11 +46,7 @@ func (u *updateUser) Handle(
 	log.InfoContext(ctx, "Updating", "user", user)
 
 	err = u.txManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err := u.userRepo.Update(ctx, tx, user)
-		if err != nil {
-			return err
-		}
-		return u.outboxRepo.CreateMany(ctx, tx, user.PullEvents()...)
+		return u.userRepo.Update(ctx, tx, user)
 	})
 	return user.ID(), err
 }

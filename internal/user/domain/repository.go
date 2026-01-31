@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"goddd/internal/outbox"
 	usersql "goddd/internal/user/infrastructure/sql"
 	"log/slog"
 
@@ -21,17 +22,20 @@ type UserRepositoryI interface {
 type UserRepository UserRepositoryI
 
 type userRepository struct {
-	log     *slog.Logger
-	userSql *usersql.Queries
+	log        *slog.Logger
+	userSql    *usersql.Queries
+	outboxRepo outbox.OutboxRepositoryI
 }
 
 func NewUserRepository(
 	log *slog.Logger,
 	userSql *usersql.Queries,
+	outboxRepo outbox.OutboxRepositoryI,
 ) UserRepository {
 	return &userRepository{
-		log:     log,
-		userSql: userSql,
+		log:        log,
+		userSql:    userSql,
+		outboxRepo: outboxRepo,
 	}
 }
 
@@ -61,7 +65,10 @@ func (u *userRepository) Create(ctx context.Context, tx pgx.Tx, user *User) erro
 			Name:      user.Name(),
 		},
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	return u.outboxRepo.CreateMany(ctx, tx, user.PullEvents()...)
 }
 
 func (u *userRepository) Update(ctx context.Context, tx pgx.Tx, user *User) error {
@@ -82,7 +89,7 @@ func (u *userRepository) Update(ctx context.Context, tx pgx.Tx, user *User) erro
 			return err
 		}
 	}
-	return err
+	return u.outboxRepo.CreateMany(ctx, tx, user.PullEvents()...)
 }
 
 func (u *userRepository) Remove(ctx context.Context, tx pgx.Tx, user *User) error {

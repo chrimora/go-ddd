@@ -1,7 +1,10 @@
 package commontest
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 type Mock[T any] interface {
-	Mock(t *testing.T, overrides ...map[string]any) *T
+	Mock(t *testing.T, ctx context.Context, overrides ...map[string]any) *T
 }

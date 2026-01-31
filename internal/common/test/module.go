@@ -4,6 +4,7 @@ import (
 	"goddd/internal/common"
 	"goddd/internal/common/infrastructure"
 	"goddd/internal/config"
+	"goddd/internal/outbox"
 
 	"go.uber.org/fx"
 )
@@ -26,4 +27,5 @@ var IntegrationTestModule = fx.Module(
 		DBPassword: "goddd",
 	}),
 	common.CoreModule,
+	outbox.CoreModule,
 )

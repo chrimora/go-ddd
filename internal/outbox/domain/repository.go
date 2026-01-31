@@ -38,6 +38,10 @@ func (e *outboxRepository) CreateMany(
 	tx pgx.Tx,
 	events ...commondomain.DomainEventI,
 ) error {
+	if len(events) == 0 {
+		return nil
+	}
+
 	traceContext := commoninfrastructure.NewTraceCtxFromCtx(ctx)
 	err := traceContext.IsComplete()
 	if err != nil {

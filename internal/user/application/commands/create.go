@@ -4,7 +4,6 @@ import (
 	"context"
 	commonapplication "goddd/internal/common/application"
 	commondomain "goddd/internal/common/domain"
-	"goddd/internal/outbox"
 	"goddd/internal/user/domain"
 	"log/slog"
 
@@ -21,20 +20,17 @@ type CreateUserCommand commonapplication.CommandI[CreateUserInput]
 func NewCreateUserCommand(
 	log *slog.Logger,
 	txManager *commondomain.TxManager,
-	outboxRepo outbox.OutboxRepositoryI,
 	userRepo domain.UserRepositoryI,
 ) CreateUserCommand {
 	return commonapplication.NewCommand(log, &createUser{
-		txManager:  txManager,
-		outboxRepo: outboxRepo,
-		userRepo:   userRepo,
+		txManager: txManager,
+		userRepo:  userRepo,
 	})
 }
 
 type createUser struct {
-	txManager  *commondomain.TxManager
-	outboxRepo outbox.OutboxRepositoryI
-	userRepo   domain.UserRepositoryI
+	txManager *commondomain.TxManager
+	userRepo  domain.UserRepositoryI
 }
 
 func (u *createUser) Handle(
@@ -44,11 +40,7 @@ func (u *createUser) Handle(
 	log.InfoContext(ctx, "Creating", "user", user)
 
 	err := u.txManager.WithTx(ctx, func(tx pgx.Tx) error {
-		err := u.userRepo.Create(ctx, tx, user)
-		if err != nil {
-			return err
-		}
-		return u.outboxRepo.CreateMany(ctx, tx, user.PullEvents()...)
+		return u.userRepo.Create(ctx, tx, user)
 	})
 	return user.ID(), err
 }

@@ -22,8 +22,7 @@ func NewUserFactory(repo domain.UserRepositoryI, txManager *commondomain.TxManag
 	return &userFactory{repo: repo, txManager: txManager}
 }
 
-func (f *userFactory) Mock(t *testing.T, overrides ...map[string]any) *domain.User {
-	ctx := context.Background()
+func (f *userFactory) Mock(t *testing.T, ctx context.Context, overrides ...map[string]any) *domain.User {
 	fields := &struct {
 		ID        uuid.UUID
 		Version   int
@@ -37,14 +36,20 @@ func (f *userFactory) Mock(t *testing.T, overrides ...map[string]any) *domain.Us
 	commontest.Merge(fields, overrides)
 
 	user := domain.RehydrateUser(fields.ID, fields.Version, fields.CreatedAt, fields.UpdatedAt, fields.Name)
-	f.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+	err := f.txManager.WithTx(ctx, func(tx pgx.Tx) error {
 		return f.repo.Create(ctx, tx, user)
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	t.Cleanup(func() {
-		f.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := f.txManager.WithTx(ctx, func(tx pgx.Tx) error {
 			return f.repo.Remove(ctx, tx, user)
 		})
+		if err != nil {
+			panic(err)
+		}
 	})
 	return user
 }
