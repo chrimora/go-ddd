@@ -38,7 +38,7 @@ tasks:
     cmds:
       - atlas schema apply --env default --url "{{.DB_CONN}}"
 
-  test:
+  test-unit:
     desc: Run unit tests
     cmds:
       - go test ./... {{.CLI_ARGS}}

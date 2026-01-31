@@ -49,5 +49,7 @@ Then run:
 
 # TODO
 
+- Pagination
+- Testcontainers
 - SQS pubsub
 

@@ -12,11 +12,11 @@ import (
 var CoreModule = fx.Module(
 	"common_core",
 	fx.Provide(
-		infrastructure.NewLogger,
-		commondomain.NewTxFactory,
-		commondomain.NewTxManager,
+		commoninfrastructure.NewLogger,
 		commonsql.NewContext,
 		commonsql.NewDBPool,
+		commondomain.NewTxFactory,
+		commondomain.NewTxManager,
 	),
 )
 

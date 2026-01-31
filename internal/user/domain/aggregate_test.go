@@ -12,9 +12,15 @@ func TestNewUser(t *testing.T) {
 	name := "Alice"
 	user := domain.NewUser(name)
 
-	assert.NotNil(t, user)
 	assert.NotEmpty(t, user.ID)
 	assert.Equal(t, name, user.Name())
+
+	events := user.PullEvents()
+	assert.Len(t, events, 1)
+
+	event, ok := events[0].(domain.UserCreatedEvent)
+	assert.True(t, ok)
+	assert.Equal(t, user.ID(), event.GetAggregateId())
 }
 
 func TestUserUpdate(t *testing.T) {
@@ -22,7 +28,7 @@ func TestUserUpdate(t *testing.T) {
 	oldUpdatedAt := user.UpdatedAt()
 
 	// Ensure time difference
-	time.Sleep(3 * time.Millisecond)
+	time.Sleep(1 * time.Millisecond)
 
 	newName := "Robert"
 	user.Update(newName)
