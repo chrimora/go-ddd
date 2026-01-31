@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type CreateUserInput struct {
@@ -42,12 +43,12 @@ func (u *createUser) Handle(
 	user := domain.NewUser(input.Name)
 	log.InfoContext(ctx, "Creating", "user", user)
 
-	err := u.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
-		err := u.userRepo.Create(txCtx, user)
+	err := u.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := u.userRepo.Create(ctx, tx, user)
 		if err != nil {
 			return err
 		}
-		return u.outboxRepo.CreateMany(txCtx, user.PullEvents()...)
+		return u.outboxRepo.CreateMany(ctx, tx, user.PullEvents()...)
 	})
 	return user.ID(), err
 }

@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/fx"
 )
 
@@ -79,8 +80,13 @@ func (w *DomainEventForwarder) RunWatchdog(ctx context.Context) {
 			w.log.Info("Forwarder watchdog stopped")
 			return
 		case <-w.ticker.C:
+			var count int
 			t := time.Now().UTC().Add(-w.cfg.WatchdogStaleLimit)
-			count, err := w.outboxRepo.RequeueStaleEvents(ctx, t, w.cfg.MaxRetries)
+			err := w.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+				c, err := w.outboxRepo.RequeueStaleEvents(ctx, tx, t, w.cfg.MaxRetries)
+				count = c
+				return err
+			})
 			if count > 0 {
 				w.log.Warn("StaleEvent count", "count", count)
 			}
@@ -98,8 +104,8 @@ func (w *DomainEventForwarder) Stop() {
 
 func (w *DomainEventForwarder) publishBatch(ctx context.Context) bool {
 	var events []*domain.OutboxEvent
-	err := w.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
-		e, err := w.outboxRepo.GetNextEventBatch(txCtx, w.cfg.PublisherBatchSize, w.cfg.MaxRetries)
+	err := w.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+		e, err := w.outboxRepo.GetNextEventBatch(ctx, tx, w.cfg.PublisherBatchSize, w.cfg.MaxRetries)
 		events = e
 		return err
 	})
@@ -119,7 +125,9 @@ func (w *DomainEventForwarder) publishBatch(ctx context.Context) bool {
 			log.Error("Event publish error", "err", err)
 		}
 
-		err = w.outboxRepo.CompleteEvent(ctx, event.ID)
+		err = w.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+			return w.outboxRepo.CompleteEvent(ctx, tx, event.ID)
+		})
 		if err != nil {
 			log.Error("Event complete error", "err", err)
 		}

@@ -7,21 +7,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-var txKey = "tx"
-
-type withTxFunc[T any] interface {
-	WithTx(tx pgx.Tx) T
-}
-
-// Return sql with a transaction from the context (if it exists)
-func WithTxFromCtx[T withTxFunc[T]](sql T, ctx context.Context) T {
-	tx, ok := ctx.Value(txKey).(pgx.Tx)
-	if ok && tx != nil {
-		return sql.WithTx(tx)
-	}
-	return sql
-}
-
 type TxFactory func(context.Context) (pgx.Tx, error)
 
 func NewTxFactory(db commonsql.DBTX) TxFactory {
@@ -38,19 +23,16 @@ func NewTxManager(txFactory TxFactory) *TxManager {
 	return &TxManager{txFactory: txFactory}
 }
 
-type TxFunc func(ctx context.Context) error
+type TxFunc func(tx pgx.Tx) error
 
-// Provide a context with a new transaction
-func (m *TxManager) WithTxCtx(ctx context.Context, fn TxFunc) error {
+func (m *TxManager) WithTx(ctx context.Context, fn TxFunc) error {
 	tx, err := m.txFactory(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
 
-	txCtx := context.WithValue(ctx, txKey, tx)
-
-	if err := fn(txCtx); err != nil {
+	if err := fn(tx); err != nil {
+		tx.Rollback(ctx)
 		return err
 	}
 	return tx.Commit(ctx)

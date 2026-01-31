@@ -9,6 +9,7 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type UpdateUserInput struct {
@@ -48,12 +49,12 @@ func (u *updateUser) Handle(
 	user.Update(input.Name)
 	log.InfoContext(ctx, "Updating", "user", user)
 
-	err = u.txManager.WithTxCtx(ctx, func(txCtx context.Context) error {
-		err := u.userRepo.Update(txCtx, user)
+	err = u.txManager.WithTx(ctx, func(tx pgx.Tx) error {
+		err := u.userRepo.Update(ctx, tx, user)
 		if err != nil {
 			return err
 		}
-		return u.outboxRepo.CreateMany(txCtx, user.PullEvents()...)
+		return u.outboxRepo.CreateMany(ctx, tx, user.PullEvents()...)
 	})
 	return user.ID(), err
 }

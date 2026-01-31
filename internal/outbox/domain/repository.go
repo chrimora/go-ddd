@@ -10,13 +10,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type OutboxRepositoryI interface {
-	CreateMany(context.Context, ...commondomain.DomainEventI) error
-	GetNextEventBatch(context.Context, int, int) ([]*OutboxEvent, error)
-	RequeueStaleEvents(context.Context, time.Time, int) (int, error)
-	CompleteEvent(context.Context, uuid.UUID) error
+	CreateMany(context.Context, pgx.Tx, ...commondomain.DomainEventI) error
+	GetNextEventBatch(context.Context, pgx.Tx, int, int) ([]*OutboxEvent, error)
+	RequeueStaleEvents(context.Context, pgx.Tx, time.Time, int) (int, error)
+	CompleteEvent(context.Context, pgx.Tx, uuid.UUID) error
 }
 
 type OutboxRepository OutboxRepositoryI
@@ -34,6 +35,7 @@ func NewOutboxRepository(log *slog.Logger, outboxSql *outboxsql.Queries) OutboxR
 
 func (e *outboxRepository) CreateMany(
 	ctx context.Context,
+	tx pgx.Tx,
 	events ...commondomain.DomainEventI,
 ) error {
 	traceContext := commoninfrastructure.NewTraceCtxFromCtx(ctx)
@@ -47,14 +49,14 @@ func (e *outboxRepository) CreateMany(
 	}
 
 	t := time.Now().UTC()
-	outboxQ := commondomain.WithTxFromCtx(e.outboxSql, ctx)
+	outboxTx := e.outboxSql.WithTx(tx)
 	for _, event := range events {
 		eventPayload, err := json.Marshal(event)
 		if err != nil {
 			return err
 		}
 
-		err = outboxQ.CreateEvent(
+		err = outboxTx.CreateEvent(
 			ctx,
 			outboxsql.CreateEventParams{
 				ID:            uuid.New(),
@@ -77,9 +79,9 @@ func (e *outboxRepository) CreateMany(
 }
 
 func (e *outboxRepository) GetNextEventBatch(
-	ctx context.Context, batchSize, retries int,
+	ctx context.Context, tx pgx.Tx, batchSize, retries int,
 ) ([]*OutboxEvent, error) {
-	events, err := e.outboxSql.ClaimNextEventBatch(
+	events, err := e.outboxSql.WithTx(tx).ClaimNextEventBatch(
 		ctx,
 		outboxsql.ClaimNextEventBatchParams{Limit: int32(batchSize), Retries: int32(retries)},
 	)
@@ -104,15 +106,17 @@ func (e *outboxRepository) GetNextEventBatch(
 }
 
 func (e *outboxRepository) RequeueStaleEvents(
-	ctx context.Context, before time.Time, retries int,
+	ctx context.Context, tx pgx.Tx, before time.Time, retries int,
 ) (int, error) {
-	ids, err := commondomain.WithTxFromCtx(e.outboxSql, ctx).RequeueStaleEvents(
+	ids, err := e.outboxSql.WithTx(tx).RequeueStaleEvents(
 		ctx,
 		outboxsql.RequeueStaleEventsParams{UpdatedAt: before, Retries: int32(retries)},
 	)
 	return len(ids), err
 }
 
-func (e *outboxRepository) CompleteEvent(ctx context.Context, id uuid.UUID) error {
-	return commondomain.WithTxFromCtx(e.outboxSql, ctx).CompleteEvent(ctx, id)
+func (e *outboxRepository) CompleteEvent(
+	ctx context.Context, tx pgx.Tx, id uuid.UUID,
+) error {
+	return e.outboxSql.WithTx(tx).CompleteEvent(ctx, id)
 }

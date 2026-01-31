@@ -4,21 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"goddd/internal/common/domain"
 	usersql "goddd/internal/user/infrastructure/sql"
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type UserRepositoryI interface {
 	Get(context.Context, uuid.UUID) (*User, error)
-	Create(context.Context, *User) error
-	Update(context.Context, *User) error
-	Remove(context.Context, *User) error
+	Create(context.Context, pgx.Tx, *User) error
+	Update(context.Context, pgx.Tx, *User) error
+	Remove(context.Context, pgx.Tx, *User) error
 }
 
 type UserRepository UserRepositoryI
+
 type userRepository struct {
 	log     *slog.Logger
 	userSql *usersql.Queries
@@ -48,8 +49,9 @@ func (u *userRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 		user.ID, int(user.Version), user.CreatedAt, user.UpdatedAt, user.Name,
 	), nil
 }
-func (u *userRepository) Create(ctx context.Context, user *User) error {
-	_, err := commondomain.WithTxFromCtx(u.userSql, ctx).CreateUser(
+
+func (u *userRepository) Create(ctx context.Context, tx pgx.Tx, user *User) error {
+	_, err := u.userSql.WithTx(tx).CreateUser(
 		ctx,
 		usersql.CreateUserParams{
 			ID:        user.ID(),
@@ -62,8 +64,8 @@ func (u *userRepository) Create(ctx context.Context, user *User) error {
 	return err
 }
 
-func (u *userRepository) Update(ctx context.Context, user *User) error {
-	_, err := commondomain.WithTxFromCtx(u.userSql, ctx).UpdateUser(
+func (u *userRepository) Update(ctx context.Context, tx pgx.Tx, user *User) error {
+	_, err := u.userSql.WithTx(tx).UpdateUser(
 		ctx,
 		usersql.UpdateUserParams{
 			ID:        user.ID(),
@@ -83,6 +85,6 @@ func (u *userRepository) Update(ctx context.Context, user *User) error {
 	return err
 }
 
-func (u *userRepository) Remove(ctx context.Context, user *User) error {
-	return commondomain.WithTxFromCtx(u.userSql, ctx).RemoveUser(ctx, user.ID())
+func (u *userRepository) Remove(ctx context.Context, tx pgx.Tx, user *User) error {
+	return u.userSql.WithTx(tx).RemoveUser(ctx, user.ID())
 }
