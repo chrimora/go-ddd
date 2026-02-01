@@ -16,7 +16,7 @@ type AggregateRoot struct {
 
 func NewAggregateRoot() AggregateRoot {
 	t := time.Now().UTC()
-	return AggregateRoot{id: uuid.New(), version: 0, createdAt: t, updatedAt: t}
+	return AggregateRoot{id: NewUUID(), version: 0, createdAt: t, updatedAt: t}
 }
 func RehydrateAggregateRoot(
 	id uuid.UUID, version int, createdAt, updatedAt time.Time,

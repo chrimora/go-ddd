@@ -63,7 +63,7 @@ func (e *outboxRepository) CreateMany(
 		err = outboxTx.CreateEvent(
 			ctx,
 			outboxsql.CreateEventParams{
-				ID:            uuid.New(),
+				ID:            commondomain.NewUUID(),
 				AggregateID:   event.GetAggregateId(),
 				AggregateType: event.GetAggregateType(),
 				EventContext:  contextPayload,

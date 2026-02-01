@@ -30,7 +30,7 @@ func (f *userFactory) Mock(t *testing.T, ctx context.Context, overrides ...map[s
 		UpdatedAt time.Time
 		Name      string
 	}{
-		ID:   uuid.New(),
+		ID:   commondomain.NewUUID(),
 		Name: "Christopher",
 	}
 	commontest.Merge(fields, overrides)

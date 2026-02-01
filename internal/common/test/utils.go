@@ -3,16 +3,15 @@ package commontest
 import (
 	"context"
 	"fmt"
+	commondomain "goddd/internal/common/domain"
 	commoninfrastructure "goddd/internal/common/infrastructure"
 	"reflect"
-
-	"github.com/google/uuid"
 )
 
 func TestContext() context.Context {
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, commoninfrastructure.RequestIdKey, uuid.NewString())
-	ctx = context.WithValue(ctx, commoninfrastructure.UserIdKey, uuid.NewString())
+	ctx = context.WithValue(ctx, commoninfrastructure.RequestIdKey, commondomain.NewUUID().String())
+	ctx = context.WithValue(ctx, commoninfrastructure.UserIdKey, commondomain.NewUUID().String())
 	return ctx
 }
 
