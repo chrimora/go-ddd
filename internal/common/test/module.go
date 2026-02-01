@@ -2,6 +2,7 @@ package commontest
 
 import (
 	"goddd/internal/common"
+	commondomain "goddd/internal/common/domain"
 	"goddd/internal/common/infrastructure"
 	"goddd/internal/config"
 	"goddd/internal/outbox"
@@ -14,6 +15,7 @@ var UnitTestModule = fx.Module(
 	fx.Supply(config.ServiceConfig{Name: "test"}),
 	fx.Provide(
 		commoninfrastructure.NewLogger,
+		fx.Annotate(commondomain.NewMockTxManager, fx.As(new(commondomain.TxManager))),
 	),
 )
 

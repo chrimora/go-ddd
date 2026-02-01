@@ -15,10 +15,10 @@ import (
 type UserFactory commontest.Mock[domain.User]
 type userFactory struct {
 	repo      domain.UserRepositoryI
-	txManager *commondomain.TxManager
+	txManager commondomain.TxManager
 }
 
-func NewUserFactory(repo domain.UserRepositoryI, txManager *commondomain.TxManager) UserFactory {
+func NewUserFactory(repo domain.UserRepositoryI, txManager commondomain.TxManager) UserFactory {
 	return &userFactory{repo: repo, txManager: txManager}
 }
 

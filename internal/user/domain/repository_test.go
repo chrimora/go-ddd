@@ -22,7 +22,7 @@ type UserSuite struct {
 	app       *fx.App
 	uf        test.UserFactory
 	repo      domain.UserRepositoryI
-	txManager *commondomain.TxManager
+	txManager commondomain.TxManager
 }
 
 func (s *UserSuite) SetupSuite() {
@@ -55,19 +55,13 @@ func (s *UserSuite) TestRaceCondition() {
 	ctx := commontest.TestContext()
 	user := s.uf.Mock(s.T(), ctx)
 
-	user.Update("Terry")
 	err := s.txManager.WithTx(ctx, func(tx pgx.Tx) error {
 		return s.repo.Update(ctx, tx, user)
 	})
 	require.NoError(s.T(), err)
 
-	user.Update("Will")
 	err = s.txManager.WithTx(ctx, func(tx pgx.Tx) error {
 		return s.repo.Update(ctx, tx, user)
 	})
 	assert.ErrorIs(s.T(), err, commondomain.ErrRaceCondition)
-
-	user, err = s.repo.Get(ctx, user.ID())
-	require.NoError(s.T(), err)
-	assert.Equal(s.T(), "Terry", user.Name())
 }

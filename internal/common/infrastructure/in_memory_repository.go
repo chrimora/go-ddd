@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type Identifiable interface {
@@ -41,6 +42,7 @@ func (r *InMemoryRepository[T]) Get(
 
 func (r *InMemoryRepository[T]) Create(
 	_ context.Context,
+	_ pgx.Tx,
 	entity T,
 ) error {
 	r.mu.Lock()
@@ -53,6 +55,7 @@ func (r *InMemoryRepository[T]) Create(
 
 func (r *InMemoryRepository[T]) Update(
 	_ context.Context,
+	_ pgx.Tx,
 	entity T,
 ) error {
 	r.mu.Lock()
@@ -69,6 +72,7 @@ func (r *InMemoryRepository[T]) Update(
 
 func (r *InMemoryRepository[T]) Remove(
 	_ context.Context,
+	_ pgx.Tx,
 	entity T,
 ) error {
 	r.mu.Lock()

@@ -1,3 +1,5 @@
+//go:build unit
+
 package domain_test
 
 import (
@@ -31,7 +33,7 @@ func TestUserUpdate(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	newName := "Robert"
-	user.Update(newName)
+	user.ChangeName(newName)
 
 	assert.Equal(t, newName, user.Name())
 	assert.Greater(t, user.UpdatedAt(), oldUpdatedAt)

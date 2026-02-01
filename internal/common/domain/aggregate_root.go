@@ -6,9 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type AggregateRootI interface {
-	PullEvents() []DomainEventI
-}
 type AggregateRoot struct {
 	id        uuid.UUID
 	version   int

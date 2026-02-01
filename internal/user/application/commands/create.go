@@ -19,7 +19,7 @@ type CreateUserCommand commonapplication.CommandI[CreateUserInput]
 
 func NewCreateUserCommand(
 	log *slog.Logger,
-	txManager *commondomain.TxManager,
+	txManager commondomain.TxManager,
 	userRepo domain.UserRepositoryI,
 ) CreateUserCommand {
 	return commonapplication.NewCommand(log, &createUser{
@@ -29,7 +29,7 @@ func NewCreateUserCommand(
 }
 
 type createUser struct {
-	txManager *commondomain.TxManager
+	txManager commondomain.TxManager
 	userRepo  domain.UserRepositoryI
 }
 

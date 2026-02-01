@@ -35,7 +35,7 @@ func RehydrateUser(
 func (u *User) Name() string   { return u.name }
 func (u *User) String() string { return fmt.Sprintf("User[id: %s]", u.ID()) }
 
-func (u *User) Update(name string) {
+func (u *User) ChangeName(name string) {
 	u.name = name
 	u.AggregateRoot.Update()
 }

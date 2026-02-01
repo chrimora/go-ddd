@@ -15,7 +15,7 @@ var CoreModule = fx.Module(
 		commoninfrastructure.NewLogger,
 		commonsql.NewContext,
 		commonsql.NewDBPool,
-		commondomain.NewTxManager,
+		fx.Annotate(commondomain.NewTransactionManager, fx.As(new(commondomain.TxManager))),
 	),
 )
 

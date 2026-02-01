@@ -15,10 +15,10 @@ import (
 type (
 	UserRoutes commonrest.RouteCollection
 	userRoutes struct {
-		log        *slog.Logger
-		getUser    queries.GetUserQuery
-		createUser commands.CreateUserCommand
-		updateUser commands.UpdateUserCommand
+		log            *slog.Logger
+		getUser        queries.GetUserQuery
+		createUser     commands.CreateUserCommand
+		userChangeName commands.UserChangeNameCommand
 	}
 )
 
@@ -26,27 +26,27 @@ func NewUserRoutes(
 	log *slog.Logger,
 	getUser queries.GetUserQuery,
 	createUser commands.CreateUserCommand,
-	updateUser commands.UpdateUserCommand,
+	userChangeName commands.UserChangeNameCommand,
 ) UserRoutes {
 	return &userRoutes{
-		log:        log,
-		getUser:    getUser,
-		createUser: createUser,
-		updateUser: updateUser,
+		log:            log,
+		getUser:        getUser,
+		createUser:     createUser,
+		userChangeName: userChangeName,
 	}
 }
 
 func (u *userRoutes) Register(api huma.API) {
-	huma.Get(api, "/user/{id}", u.get)
-	huma.Post(api, "/user", u.create)
-	huma.Put(api, "/user/{id}", u.update)
+	huma.Get(api, "/users/profiles", u.get)
+	huma.Post(api, "/users/register", u.register)
+	huma.Put(api, "/users/{id}/change-name", u.changeName)
 }
 
-type UserCreatePayload struct {
+type RegisterPayload struct {
 	Name string `json:"name"`
 }
-type UserUpdatePayload struct {
-	UserCreatePayload
+type ChangeNamePayload struct {
+	Name string `json:"name"`
 }
 
 type UserResponse struct {
@@ -55,7 +55,7 @@ type UserResponse struct {
 }
 
 func (u *userRoutes) get(
-	ctx context.Context, req *commonrest.IdParam,
+	ctx context.Context, req *commonrest.IdQuery,
 ) (*commonrest.Response[UserResponse], error) {
 	user, err := u.getUser.Handle(ctx, queries.GetUserInput{Id: req.ID})
 	if err != nil {
@@ -72,8 +72,8 @@ func (u *userRoutes) get(
 	return commonrest.BuildResponse(res), nil
 }
 
-func (u *userRoutes) create(
-	ctx context.Context, req *commonrest.CreateRequest[UserCreatePayload],
+func (u *userRoutes) register(
+	ctx context.Context, req *commonrest.CreateRequest[RegisterPayload],
 ) (*commonrest.Response[commonrest.IdPayload], error) {
 	id, err := u.createUser.Handle(ctx, commands.CreateUserInput{Name: req.Body.Name})
 	if err != nil {
@@ -83,10 +83,10 @@ func (u *userRoutes) create(
 	return commonrest.BuildResponse(res), nil
 }
 
-func (u *userRoutes) update(
-	ctx context.Context, req *commonrest.UpdateRequest[UserUpdatePayload],
+func (u *userRoutes) changeName(
+	ctx context.Context, req *commonrest.UpdateRequest[ChangeNamePayload],
 ) (*commonrest.EmptyResponse, error) {
-	_, err := u.updateUser.Handle(ctx, commands.UpdateUserInput{Id: req.ID, Name: req.Body.Name})
+	_, err := u.userChangeName.Handle(ctx, commands.UserChangeNameInput{Id: req.ID, Name: req.Body.Name})
 	if err != nil {
 		switch {
 		case errors.Is(err, commondomain.ErrNotFound):

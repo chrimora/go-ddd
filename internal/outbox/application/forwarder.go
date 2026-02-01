@@ -14,7 +14,7 @@ import (
 
 type DomainEventForwarder struct {
 	log        *slog.Logger
-	txManager  *commondomain.TxManager
+	txManager  commondomain.TxManager
 	outboxRepo domain.OutboxRepositoryI
 	cfg        *config.ForwarderConfig
 	publisher  EventPublisherI
@@ -26,7 +26,7 @@ type DomainEventForwarder struct {
 func NewForwarder(
 	lc fx.Lifecycle,
 	log *slog.Logger,
-	txManager *commondomain.TxManager,
+	txManager commondomain.TxManager,
 	outboxRepo domain.OutboxRepositoryI,
 	cfg *config.ForwarderConfig,
 	publisher EventPublisherI,

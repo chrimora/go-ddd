@@ -11,38 +11,38 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type UpdateUserInput struct {
+type UserChangeNameInput struct {
 	Id   uuid.UUID
 	Name string
 }
 
-type UpdateUserCommand commonapplication.CommandI[UpdateUserInput]
+type UserChangeNameCommand commonapplication.CommandI[UserChangeNameInput]
 
-func NewUpdateUserCommand(
+func NewUserChangeNameCommand(
 	log *slog.Logger,
-	txManager *commondomain.TxManager,
+	txManager commondomain.TxManager,
 	userRepo domain.UserRepositoryI,
-) UpdateUserCommand {
-	return commonapplication.NewCommand(log, &updateUser{
+) UserChangeNameCommand {
+	return commonapplication.NewCommand(log, &changeName{
 		txManager: txManager,
 		userRepo:  userRepo,
 	})
 }
 
-type updateUser struct {
-	txManager *commondomain.TxManager
+type changeName struct {
+	txManager commondomain.TxManager
 	userRepo  domain.UserRepositoryI
 }
 
-func (u *updateUser) Handle(
-	ctx context.Context, log *slog.Logger, input UpdateUserInput,
+func (u *changeName) Handle(
+	ctx context.Context, log *slog.Logger, input UserChangeNameInput,
 ) (uuid.UUID, error) {
 	user, err := u.userRepo.Get(ctx, input.Id)
 	if err != nil {
 		return user.ID(), err
 	}
 
-	user.Update(input.Name)
+	user.ChangeName(input.Name)
 	log.InfoContext(ctx, "Updating", "user", user)
 
 	err = u.txManager.WithTx(ctx, func(tx pgx.Tx) error {
