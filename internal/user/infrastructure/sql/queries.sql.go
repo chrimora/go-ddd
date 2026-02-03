@@ -7,88 +7,47 @@ package sql
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
 
-const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, version, created_at, updated_at, name)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id
+const listUsers = `-- name: ListUsers :many
+SELECT id, version, created_at, updated_at, name
+FROM users
+WHERE ($1::uuid IS NULL OR id > $1)
+  AND ($2::text IS NULL OR name ILIKE '%' || $2 || '%')
+ORDER BY id
+LIMIT $3
 `
 
-type CreateUserParams struct {
-	ID        uuid.UUID
-	Version   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
+type ListUsersParams struct {
+	After        *uuid.UUID
+	Name         *string
+	LimitPlusOne int32
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createUser,
-		arg.ID,
-		arg.Version,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-		arg.Name,
-	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
-}
-
-const getUser = `-- name: GetUser :one
-SELECT id, version, created_at, updated_at, name FROM users WHERE id = $1
-`
-
-func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
-	row := q.db.QueryRow(ctx, getUser, id)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Version,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Name,
-	)
-	return i, err
-}
-
-const removeUser = `-- name: RemoveUser :exec
-DELETE FROM users
-WHERE id = $1
-`
-
-func (q *Queries) RemoveUser(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, removeUser, id)
-	return err
-}
-
-const updateUser = `-- name: UpdateUser :one
-UPDATE users
-SET version = version + 1, updated_at = $3, name = $4 
-WHERE id = $1
-AND version = $2
-RETURNING id
-`
-
-type UpdateUserParams struct {
-	ID        uuid.UUID
-	Version   int32
-	UpdatedAt time.Time
-	Name      string
-}
-
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, updateUser,
-		arg.ID,
-		arg.Version,
-		arg.UpdatedAt,
-		arg.Name,
-	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, listUsers, arg.After, arg.Name, arg.LimitPlusOne)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []User{}
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

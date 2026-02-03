@@ -5,3 +5,5 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ NOT NULL,
     name       TEXT        NOT NULL
 );
+
+CREATE INDEX ON users (id);

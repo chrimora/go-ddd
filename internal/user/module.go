@@ -20,6 +20,7 @@ var CoreModule = fx.Module(
 		NewUserSql,
 		fx.Annotate(domain.NewUserRepository, fx.As(new(domain.UserRepositoryI))),
 		queries.NewGetUserQuery,
+		queries.NewGetProfilesQuery,
 		commands.NewCreateUserCommand,
 		commands.NewUserChangeNameCommand,
 	),

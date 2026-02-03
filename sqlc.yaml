@@ -32,7 +32,7 @@ sql:
   - name: "outbox"
     engine: "postgresql"
     schema: "./internal/outbox/infrastructure/sql/schema.sql"
-    queries: "./internal/outbox/infrastructure/sql/queries.sql"
+    queries: "./internal/outbox/infrastructure/sql/"
     gen:
       go:
         package: "sql"
@@ -41,7 +41,7 @@ sql:
   - name: "user"
     engine: "postgresql"
     schema: "./internal/user/infrastructure/sql/schema.sql"
-    queries: "./internal/user/infrastructure/sql/queries.sql"
+    queries: "./internal/user/infrastructure/sql/"
     gen:
       go:
         package: "sql"

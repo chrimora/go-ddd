@@ -13,9 +13,6 @@ type (
 	IdParam struct {
 		ID uuid.UUID `path:"id"`
 	}
-	IdQuery struct {
-		ID uuid.UUID `query:"id"`
-	}
 	CreateRequest[T any] struct {
 		Body T
 	}
