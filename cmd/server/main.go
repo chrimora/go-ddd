@@ -12,9 +12,7 @@ import (
 )
 
 func main() {
-	service := config.ServiceConfig{Name: "server"}
 	fx.New(
-		fx.Supply(service),
 		common.ServerModule,
 		config.ServerModule,
 		outbox.ServerModule,

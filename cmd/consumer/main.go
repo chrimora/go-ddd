@@ -10,9 +10,7 @@ import (
 )
 
 func main() {
-	service := config.ServiceConfig{Name: "consumer"}
 	fx.New(
-		fx.Supply(service),
 		common.ConsumerModule,
 		config.ConsumerModule,
 		outbox.ConsumerModule,

@@ -12,6 +12,7 @@ var Module = fx.Module(
 var CoreModule = fx.Module(
 	"config_core",
 	fx.Provide(
+		NewConfig[ServiceConfig],
 		NewConfig[DBConfig],
 	),
 )

@@ -9,7 +9,7 @@ import (
 
 type contextHandler struct {
 	slog.Handler
-	service config.ServiceConfig
+	service *config.ServiceConfig
 }
 
 func (h *contextHandler) Handle(ctx context.Context, r slog.Record) error {
@@ -40,10 +40,14 @@ func (h *contextHandler) WithGroup(name string) slog.Handler {
 	}
 }
 
-func NewLogger(service config.ServiceConfig) *slog.Logger {
-	// Prod
-	// base := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo, AddSource: true})
-	base := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})
+func NewLogger(service *config.ServiceConfig) *slog.Logger {
+	var base slog.Handler
+	if service.IsProd() {
+		base = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo, AddSource: true})
+	} else {
+		base = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})
+	}
+
 	handler := &contextHandler{Handler: base, service: service}
 	return slog.New(handler)
 }

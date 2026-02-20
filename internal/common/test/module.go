@@ -12,7 +12,7 @@ import (
 
 var UnitTestModule = fx.Module(
 	"test_unit",
-	fx.Supply(config.ServiceConfig{Name: "test"}),
+	fx.Supply(&config.ServiceConfig{Name: "test", Env: config.TestEnvEnum}),
 	fx.Provide(
 		commoninfrastructure.NewLogger,
 		fx.Annotate(commondomain.NewMockTxManager, fx.As(new(commondomain.TxManager))),
@@ -21,7 +21,7 @@ var UnitTestModule = fx.Module(
 
 var IntegrationTestModule = fx.Module(
 	"test_integration",
-	fx.Supply(config.ServiceConfig{Name: "test"}),
+	fx.Supply(&config.ServiceConfig{Name: "test", Env: config.TestEnvEnum}),
 	fx.Supply(&config.DBConfig{
 		DBHost:     "localhost",
 		DBUser:     "goddd",
