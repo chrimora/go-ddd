@@ -21,16 +21,24 @@ type TraceContext struct {
 
 var ErrBadContext = errors.New("bad trace context")
 
-func NewTraceCtxFromCtx(ctx context.Context) (tc TraceContext) {
+func NewTraceCtxFromCtx(ctx context.Context) (TraceContext, error) {
+	var tc TraceContext
+
 	requestId, ok := ctx.Value(RequestIdKey).(string)
 	if ok {
 		tc.RequestId = requestId
+	} else {
+		return tc, fmt.Errorf("%w: %s", ErrBadContext, RequestIdKey)
 	}
+
 	userId, ok := ctx.Value(UserIdKey).(string)
 	if ok {
 		tc.UserId = userId
+	} else {
+		return tc, fmt.Errorf("%w: %s", ErrBadContext, UserIdKey)
 	}
-	return tc
+
+	return tc, nil
 }
 
 func NewTraceCtxFromJson(ctx []byte) (tc TraceContext, err error) {
@@ -42,16 +50,6 @@ func NewTraceCtxFromMessage(metadata message.Metadata) TraceContext {
 		RequestId: metadata.Get(RequestIdKey),
 		UserId:    metadata.Get(UserIdKey),
 	}
-}
-
-func (tc *TraceContext) IsComplete() error {
-	if tc.RequestId == "" {
-		return fmt.Errorf("%w: %s", ErrBadContext, RequestIdKey)
-	}
-	if tc.UserId == "" {
-		// return fmt.Errorf("%w: %s", ErrBadContext, UserIdKey)
-	}
-	return nil
 }
 
 func (tc *TraceContext) ToCtx(ctx context.Context) context.Context {

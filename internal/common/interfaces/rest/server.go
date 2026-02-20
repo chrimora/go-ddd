@@ -19,6 +19,7 @@ func NewServeMux() *http.ServeMux {
 func NewApi(routeCollection []RouteCollection, mux *http.ServeMux) *huma.API {
 	api := humago.New(mux, huma.DefaultConfig("Go Template", "1.0"))
 	api.UseMiddleware(middleware.RequestIdMiddleware)
+	api.UseMiddleware(middleware.UserAuthMiddleware)
 	for _, routes := range routeCollection {
 		routes.Register(api)
 	}

@@ -42,8 +42,7 @@ func (e *outboxRepository) CreateMany(
 		return nil
 	}
 
-	traceContext := commoninfrastructure.NewTraceCtxFromCtx(ctx)
-	err := traceContext.IsComplete()
+	traceContext, err := commoninfrastructure.NewTraceCtxFromCtx(ctx)
 	if err != nil {
 		return err
 	}

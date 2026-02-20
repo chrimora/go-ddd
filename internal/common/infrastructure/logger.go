@@ -15,12 +15,9 @@ type contextHandler struct {
 func (h *contextHandler) Handle(ctx context.Context, r slog.Record) error {
 	r.AddAttrs(slog.String("service", h.service.Name))
 
-	traceCtx := NewTraceCtxFromCtx(ctx)
-
-	if traceCtx.RequestId != "" {
+	traceCtx, err := NewTraceCtxFromCtx(ctx)
+	if err == nil {
 		r.AddAttrs(slog.String(RequestIdKey, traceCtx.RequestId))
-	}
-	if traceCtx.UserId != "" {
 		r.AddAttrs(slog.String(UserIdKey, traceCtx.UserId))
 	}
 
