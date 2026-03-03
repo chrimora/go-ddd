@@ -2,7 +2,6 @@ package user
 
 import (
 	"goddd/internal/common/application"
-	"goddd/internal/common/infrastructure/sql"
 	"goddd/internal/common/interfaces/rest"
 	"goddd/internal/user/application/commands"
 	"goddd/internal/user/application/eventhandlers"
@@ -17,7 +16,8 @@ import (
 var CoreModule = fx.Module(
 	"user_core",
 	fx.Provide(
-		NewUserSql,
+		sql.NewWriteUserSql,
+		sql.NewReadUserSql,
 		fx.Annotate(domain.NewUserRepository, fx.As(new(domain.UserRepositoryI))),
 		queries.NewGetUserQuery,
 		queries.NewGetProfilesQuery,
@@ -40,7 +40,3 @@ var ConsumerModule = fx.Module(
 	commonapplication.AsEventHandler(eventhandlers.NewUserCreatedHandler),
 	commonapplication.AsEventHandler(eventhandlers.NewUserCreatedHandler2),
 )
-
-func NewUserSql(db commonsql.DBTX) *sql.Queries {
-	return sql.New(db)
-}

@@ -2,7 +2,6 @@ package commonsql
 
 import (
 	"context"
-	"fmt"
 	"goddd/internal/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -13,16 +12,16 @@ func NewContext() context.Context {
 	return context.Background()
 }
 
-func NewDBPool(lc fx.Lifecycle, cfg *config.DBConfig, ctx context.Context) DBTX {
-	pool, err := pgxpool.New(ctx,
-		fmt.Sprintf(
-			"host=%s dbname=%s user=%s password=%s",
-			cfg.DBHost,
-			cfg.DBName,
-			cfg.DBUser,
-			cfg.DBPassword,
-		),
-	)
+func NewWriteDB(lc fx.Lifecycle, cfg *config.DBConfig, ctx context.Context) WriteDB {
+	return newDBPool(lc, cfg.WriteConnString(), ctx)
+}
+
+func NewReadDB(lc fx.Lifecycle, cfg *config.DBConfig, ctx context.Context) ReadDB {
+	return newDBPool(lc, cfg.WriteConnString(), ctx)
+}
+
+func newDBPool(lc fx.Lifecycle, connString string, ctx context.Context) *pgxpool.Pool {
+	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
 		panic(err)
 	}

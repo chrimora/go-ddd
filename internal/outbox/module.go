@@ -36,6 +36,6 @@ var ConsumerModule = fx.Module(
 	),
 )
 
-func NewOutboxSql(db commonsql.DBTX) *sql.Queries {
+func NewOutboxSql(db commonsql.WriteDB) *sql.Queries {
 	return sql.New(db)
 }

@@ -14,7 +14,8 @@ var CoreModule = fx.Module(
 	fx.Provide(
 		commoninfrastructure.NewLogger,
 		commonsql.NewContext,
-		commonsql.NewDBPool,
+		commonsql.NewWriteDB,
+		commonsql.NewReadDB,
 		fx.Annotate(commondomain.NewTransactionManager, fx.As(new(commondomain.TxManager))),
 	),
 )

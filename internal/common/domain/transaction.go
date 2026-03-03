@@ -14,10 +14,10 @@ type TxManager interface {
 }
 
 type transactionManager struct {
-	db commonsql.DBTX
+	db commonsql.WriteDB
 }
 
-func NewTransactionManager(db commonsql.DBTX) *transactionManager {
+func NewTransactionManager(db commonsql.WriteDB) *transactionManager {
 	return &transactionManager{db: db}
 }
 func (m *transactionManager) WithTx(ctx context.Context, fn txFunc) error {

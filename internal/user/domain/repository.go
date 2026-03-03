@@ -23,13 +23,13 @@ type UserRepository UserRepositoryI
 
 type userRepository struct {
 	log        *slog.Logger
-	userSql    *usersql.Queries
+	userSql    usersql.WriteUserSql
 	outboxRepo outbox.OutboxRepositoryI
 }
 
 func NewUserRepository(
 	log *slog.Logger,
-	userSql *usersql.Queries,
+	userSql usersql.WriteUserSql,
 	outboxRepo outbox.OutboxRepositoryI,
 ) UserRepository {
 	return &userRepository{

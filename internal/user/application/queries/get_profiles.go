@@ -25,7 +25,7 @@ type GetProfilesQuery commonapplication.QueryI[GetProfilesInput, GetProfilesOutp
 
 func NewGetProfilesQuery(
 	log *slog.Logger,
-	userSql *usersql.Queries,
+	userSql usersql.ReadUserSql,
 ) GetProfilesQuery {
 	return commonapplication.NewQuery(log, &getProfiles{
 		userSql: userSql,
@@ -33,7 +33,7 @@ func NewGetProfilesQuery(
 }
 
 type getProfiles struct {
-	userSql *usersql.Queries
+	userSql usersql.ReadUserSql
 }
 
 func (u *getProfiles) Handle(
