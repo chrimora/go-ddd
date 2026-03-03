@@ -24,7 +24,7 @@ tasks:
   sqlgen:
     desc: Generate sqlc pkgs
     cmds:
-      # sqlc does not suppoort yml anchors
+      # sqlc does not support yml anchors
       - yq eval 'explode(.) | del(.common_overrides)' sqlc.yaml > .sqlc.inline.yaml
       - sqlc generate -f .sqlc.inline.yaml
 

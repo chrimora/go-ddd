@@ -1,12 +1,12 @@
 # Go DDD
 
-Simple DDD template for Go.
+Simple CQRS DDD template for Go.  
+Designed for larger and scaling code bases.
 
-Vertical layered web service + async event consumer.
+A rest service + async event consumer.
 
 - Infra
   - Docker compose DB
-  - Taskfile commands
   - Declarative migrations - Atlas
 
 - Code
@@ -14,28 +14,41 @@ Vertical layered web service + async event consumer.
   - Contextual logging - slog
   - Dependency injection - fx
   - Open API gen & request validation - Huma
-  - Repository implementation - sqlc
+  - Generated SQL code - sqlc
   - Transactional event outbox
   - Event pubsub - watermill
 
 ## Requirements
 
 - Go
-- Taskfile
 - sqlc
+- yq
 - Atlas
 - docker compose
-- yq
+- Taskfile
 
 ## Quick start
 
 - `task infra`
+- `task migrate`
 - `task server`
 - `task consumer`
 
 Checkout http://localhost:8080/docs
 
-## SQL
+## TODO
+
+- Testcontainers
+- SQS pubsub - FIFO + MessageGroupId (AggregateId)
+
+## Guides
+
+### Auth
+
+Auth is intentionally left out as this will depend on business requirements.
+A dummy auth middleware has been added, ideally update this to validate a jwt or session cookie/token.
+
+### SQL
 
 Using SQLC and Atlas to manage sql + migrations.
 
@@ -47,8 +60,5 @@ Then run:
 - `task sqlgen`
 - `task migrate`
 
-# TODO
-
-- Testcontainers
-- SQS pubsub
+Atlas migrations are declarative. There is no setup for data migrations.
 
