@@ -20,8 +20,8 @@ var CoreModule = fx.Module(
 	),
 )
 
-var ServerModule = fx.Module(
-	"common_server",
+var APIModule = fx.Module(
+	"common_api",
 	CoreModule,
 	fx.Provide(
 		commonrest.NewHTTPServer,

@@ -17,8 +17,8 @@ var CoreModule = fx.Module(
 	),
 )
 
-var ServerModule = fx.Module(
-	"config_server",
+var APIModule = fx.Module(
+	"config_api",
 	CoreModule,
 	fx.Provide(
 		NewConfig[ServerConfig],

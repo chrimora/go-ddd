@@ -26,8 +26,8 @@ var CoreModule = fx.Module(
 	),
 )
 
-var ServerModule = fx.Module(
-	"post_server",
+var APIModule = fx.Module(
+	"post_api",
 	CoreModule,
 	fx.Provide(
 		commonrest.AsRouteCollection(postrest.NewPostRoutes),

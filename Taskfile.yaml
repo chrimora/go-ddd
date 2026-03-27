@@ -11,10 +11,10 @@ tasks:
     cmds:
       - docker compose up -d
 
-  server:
-    desc: Run the server locally
+  api:
+    desc: Run the api locally
     cmds:
-      - go run cmd/server/main.go
+      - go run cmd/api/main.go
 
   consumer:
     desc: Run the consumer locally

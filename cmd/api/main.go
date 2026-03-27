@@ -13,10 +13,10 @@ import (
 
 func main() {
 	fx.New(
-		common.ServerModule,
-		config.ServerModule,
-		outbox.ServerModule,
-		post.ServerModule,
+		common.APIModule,
+		config.APIModule,
+		outbox.APIModule,
+		post.APIModule,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
 }

@@ -32,7 +32,7 @@ A rest service + async event consumer.
 - `cp .env.dev .env`
 - `task infra`
 - `task migrate`
-- `task server`
+- `task api`
 - `task consumer`
 
 Checkout http://localhost:8080/docs
@@ -46,7 +46,7 @@ Checkout http://localhost:8080/docs
 
 ### Adding an aggregate
 
-The `user` package is an example bounded context containing a single aggregate. A bounded context can hold many aggregates — e.g. an `order` context might contain `Order`, `OrderLine`, and `Invoice` aggregates, each with their own repository, commands, queries, and events, all wired together in a shared `module.go`.
+The `post` package is an example bounded context containing a single aggregate. A bounded context can hold many aggregates — e.g. an `order` context might contain `Order`, `OrderLine`, and `Invoice` aggregates, each with their own repository, commands, queries, and events, all wired together in a shared `module.go`.
 
 To add a new aggregate (within a new or existing bounded context), create the following:
 
@@ -66,13 +66,13 @@ internal/<context>/
     queries.sql        # sqlc read queries
   interfaces/rest/
     routes.go          # Huma route registration
-  module.go            # fx CoreModule, ServerModule, ConsumerModule
+  module.go            # fx CoreModule, APIModule, ConsumerModule
   test/
     module.go          # UnitTestModule + IntegrationTestModule
     factory.go         # Mock factory using RehydrateX + repo.Create
 ```
 
-Wire the new context into `cmd/server/main.go` and `cmd/consumer/main.go`, then run `task migrate`.
+Wire the new context into `cmd/api/main.go` and `cmd/consumer/main.go`, then run `task migrate`.
 
 ### Auth
 
@@ -93,8 +93,8 @@ serially and require `task infra` to be up.
 
 Factories create and clean up test data via `t.Cleanup`:
 ```go
-user := s.uf.Mock(t, ctx)                                  // default fields
-user := s.uf.Mock(t, ctx, map[string]any{"Name": "Alice"}) // overrides
+post := s.pf.Mock(t, ctx)                                        // default fields
+post := s.pf.Mock(t, ctx, map[string]any{"Name": "Hello World"}) // overrides
 ```
 
 ### SQL

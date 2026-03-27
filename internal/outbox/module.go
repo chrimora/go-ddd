@@ -19,8 +19,8 @@ var CoreModule = fx.Module(
 	),
 )
 
-var ServerModule = fx.Module(
-	"outbox_server",
+var APIModule = fx.Module(
+	"outbox_api",
 	CoreModule,
 )
 
