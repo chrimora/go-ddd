@@ -122,14 +122,11 @@ type CreatePostPayload struct {
 func (r *postRoutes) create(
 	ctx context.Context, req *commonrest.CreateRequest[CreatePostPayload],
 ) (*commonrest.Response[commonrest.IdPayload], error) {
-	trace, err := commoninfrastructure.NewTraceCtxFromCtx(ctx)
-	if err != nil {
-		return nil, commonrest.UnexpectedErrorResponse(r.log, ctx, err)
-	}
+	rc := commoninfrastructure.MustGetRequestCtx(ctx)
 
 	id, err := r.createPost.Handle(ctx, commands.CreatePostInput{
 		Title:  req.Body.Title,
-		Author: trace.UserId,
+		Author: rc.UserId,
 	})
 	if err != nil {
 		return nil, commonrest.UnexpectedErrorResponse(r.log, ctx, err)

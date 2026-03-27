@@ -12,7 +12,9 @@ func RequestIdMiddleware(ctx huma.Context, next func(huma.Context)) {
 	requestId := commondomain.NewUUID().String()
 
 	ctx.SetHeader("x-request-id", requestId)
-	ctx = huma.WithValue(ctx, commoninfrastructure.RequestIdKey, requestId)
+	ctx = huma.WithValue(ctx, commoninfrastructure.RequestContextKey, commoninfrastructure.RequestContext{
+		RequestId: requestId,
+	})
 
 	next(ctx)
 }

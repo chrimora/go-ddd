@@ -9,10 +9,11 @@ import (
 )
 
 func TestContext() context.Context {
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, commoninfrastructure.RequestIdKey, commondomain.NewUUID().String())
-	ctx = context.WithValue(ctx, commoninfrastructure.UserIdKey, commondomain.NewUUID().String())
-	return ctx
+	rc := commoninfrastructure.RequestContext{
+		RequestId: commondomain.NewUUID().String(),
+		UserId:    commondomain.NewUUID().String(),
+	}
+	return rc.ToCtx(context.Background())
 }
 
 // obj needs to be pointer

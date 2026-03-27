@@ -42,11 +42,8 @@ func (e *outboxRepository) CreateMany(
 		return nil
 	}
 
-	traceContext, err := commoninfrastructure.NewTraceCtxFromCtx(ctx)
-	if err != nil {
-		return err
-	}
-	contextPayload, err := json.Marshal(traceContext)
+	rc := commoninfrastructure.MustGetRequestCtx(ctx)
+	contextPayload, err := json.Marshal(rc)
 	if err != nil {
 		return err
 	}

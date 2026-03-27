@@ -26,8 +26,8 @@ func NewConsumer(
 			string(handler.GetType()),
 			subscriber,
 			func(msg *message.Message) error {
-				trace := commoninfrastructure.NewTraceCtxFromMessage(msg.Metadata)
-				return handler.Handle(trace.ToCtx(context.Background()), msg.UUID, msg.Payload)
+				reqCtx := commoninfrastructure.NewRequestCtxFromMessage(msg.Metadata)
+				return handler.Handle(reqCtx.ToCtx(context.Background()), msg.UUID, msg.Payload)
 			},
 		)
 	}

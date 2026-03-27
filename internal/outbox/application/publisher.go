@@ -26,12 +26,11 @@ func NewEventPublisher(pub message.Publisher) EventPublisher {
 func (p *eventPublisher) Publish(ctx context.Context, event *domain.OutboxEvent) error {
 	msg := message.NewMessage(event.ID.String(), event.Payload)
 
-	trace, err := commoninfrastructure.NewTraceCtxFromJson(event.EventContext)
+	reqCtx, err := commoninfrastructure.NewRequestCtxFromJson(event.EventContext)
 	if err != nil {
 		return err
 	}
-	msg.Metadata.Set(commoninfrastructure.RequestIdKey, trace.RequestId)
-	msg.Metadata.Set(commoninfrastructure.UserIdKey, trace.UserId)
+	reqCtx.ToMessageMetadata(msg.Metadata)
 
 	return p.publisher.Publish(event.EventType, msg)
 }
