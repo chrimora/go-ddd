@@ -30,10 +30,10 @@ A rest service + async event consumer.
 ## Quick start
 
 - `cp .env.dev .env`
+- `task install`
 - `task infra`
 - `task migrate`
-- `task api`
-- `task consumer`
+- `task run`
 
 Checkout http://localhost:8080/docs
 
