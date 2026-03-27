@@ -1,6 +1,9 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type DBConfig struct {
 	DBHost     string `env:"POSTGRES_HOST"`
@@ -13,6 +16,12 @@ type DBConfig struct {
 	ReadDBName     string `env:"READ_POSTGRES_DB" envDefault:""`
 	ReadDBUser     string `env:"READ_POSTGRES_USER" envDefault:""`
 	ReadDBPassword string `env:"READ_POSTGRES_PASSWORD" envDefault:""`
+
+	// Connection pool settings
+	PoolMaxConns    int32         `env:"DB_POOL_MAX_CONNS" envDefault:"10"`
+	PoolMinConns    int32         `env:"DB_POOL_MIN_CONNS" envDefault:"2"`
+	PoolMaxConnIdle time.Duration `env:"DB_POOL_MAX_CONN_IDLE" envDefault:"30m"`
+	PoolMaxConnLife time.Duration `env:"DB_POOL_MAX_CONN_LIFE" envDefault:"1h"`
 }
 
 func (cfg DBConfig) WriteConnString() string {

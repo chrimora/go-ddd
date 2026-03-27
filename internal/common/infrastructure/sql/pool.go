@@ -13,15 +13,24 @@ func NewContext() context.Context {
 }
 
 func NewWriteDB(lc fx.Lifecycle, cfg *config.DBConfig, ctx context.Context) WriteDB {
-	return newDBPool(lc, cfg.WriteConnString(), ctx)
+	return newDBPool(lc, cfg.WriteConnString(), cfg, ctx)
 }
 
 func NewReadDB(lc fx.Lifecycle, cfg *config.DBConfig, ctx context.Context) ReadDB {
-	return newDBPool(lc, cfg.WriteConnString(), ctx)
+	return newDBPool(lc, cfg.ReadConnString(), cfg, ctx)
 }
 
-func newDBPool(lc fx.Lifecycle, connString string, ctx context.Context) *pgxpool.Pool {
-	pool, err := pgxpool.New(ctx, connString)
+func newDBPool(lc fx.Lifecycle, connString string, cfg *config.DBConfig, ctx context.Context) *pgxpool.Pool {
+	poolCfg, err := pgxpool.ParseConfig(connString)
+	if err != nil {
+		panic(err)
+	}
+	poolCfg.MaxConns = cfg.PoolMaxConns
+	poolCfg.MinConns = cfg.PoolMinConns
+	poolCfg.MaxConnIdleTime = cfg.PoolMaxConnIdle
+	poolCfg.MaxConnLifetime = cfg.PoolMaxConnLife
+
+	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
 	if err != nil {
 		panic(err)
 	}
