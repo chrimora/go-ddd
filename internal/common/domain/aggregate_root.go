@@ -41,3 +41,15 @@ func (r *AggregateRoot) PullEvents() []DomainEventI {
 	r.events = []DomainEventI{}
 	return events
 }
+
+func (r *AggregateRoot) Clone() AggregateRoot {
+	events := make([]DomainEventI, len(r.events))
+	copy(events, r.events)
+	return AggregateRoot{
+		id:        r.id,
+		version:   r.version,
+		createdAt: r.createdAt,
+		updatedAt: r.updatedAt,
+		events:    events,
+	}
+}

@@ -39,3 +39,10 @@ func (u *User) ChangeName(name string) {
 	u.name = name
 	u.AggregateRoot.Update()
 }
+
+func (u *User) Clone() *User {
+	return &User{
+		AggregateRoot: u.AggregateRoot.Clone(),
+		name:          u.name,
+	}
+}

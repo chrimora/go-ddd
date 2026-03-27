@@ -9,16 +9,17 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type Identifiable interface {
+type Identifiable[T any] interface {
 	ID() uuid.UUID
+	Clone() T
 }
 
-type InMemoryRepository[T Identifiable] struct {
+type InMemoryRepository[T Identifiable[T]] struct {
 	mu   sync.RWMutex
 	data map[uuid.UUID]T
 }
 
-func NewInMemoryRepository[T Identifiable]() *InMemoryRepository[T] {
+func NewInMemoryRepository[T Identifiable[T]]() *InMemoryRepository[T] {
 	return &InMemoryRepository[T]{
 		data: make(map[uuid.UUID]T),
 	}
@@ -37,7 +38,7 @@ func (r *InMemoryRepository[T]) Get(
 		return zero, commondomain.ErrNotFound
 	}
 
-	return clone(entity), nil
+	return entity.Clone(), nil
 }
 
 func (r *InMemoryRepository[T]) Create(
@@ -49,7 +50,7 @@ func (r *InMemoryRepository[T]) Create(
 	defer r.mu.Unlock()
 
 	id := entity.ID()
-	r.data[id] = clone(entity)
+	r.data[id] = entity.Clone()
 	return nil
 }
 
@@ -66,7 +67,7 @@ func (r *InMemoryRepository[T]) Update(
 		return commondomain.ErrNotFound
 	}
 
-	r.data[id] = clone(entity)
+	r.data[id] = entity.Clone()
 	return nil
 }
 
@@ -85,8 +86,4 @@ func (r *InMemoryRepository[T]) Remove(
 
 	delete(r.data, id)
 	return nil
-}
-
-func clone[T any](v T) T {
-	return v
 }
