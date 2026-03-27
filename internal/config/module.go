@@ -20,6 +20,9 @@ var CoreModule = fx.Module(
 var ServerModule = fx.Module(
 	"config_server",
 	CoreModule,
+	fx.Provide(
+		NewConfig[ServerConfig],
+	),
 )
 
 var ConsumerModule = fx.Module(

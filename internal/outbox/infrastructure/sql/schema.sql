@@ -14,3 +14,4 @@ CREATE TABLE event_outbox (
 );
 
 CREATE INDEX idx_event_outbox_aggregate_id ON event_outbox (aggregate_id);
+CREATE INDEX idx_event_outbox_status_created_at ON event_outbox (status, created_at);

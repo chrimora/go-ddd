@@ -3,6 +3,7 @@ package commonrest
 import (
 	"context"
 	"goddd/internal/common/infrastructure/middleware"
+	"goddd/internal/config"
 	"log/slog"
 	"net"
 	"net/http"
@@ -17,6 +18,9 @@ func NewServeMux() *http.ServeMux {
 }
 
 func NewApi(routeCollection []RouteCollection, mux *http.ServeMux) *huma.API {
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 	api := humago.New(mux, huma.DefaultConfig("Go Template", "1.0"))
 	api.UseMiddleware(middleware.RequestIdMiddleware)
 	api.UseMiddleware(middleware.UserAuthMiddleware)
@@ -26,8 +30,8 @@ func NewApi(routeCollection []RouteCollection, mux *http.ServeMux) *huma.API {
 	return &api
 }
 
-func NewHTTPServer(lc fx.Lifecycle, mux *http.ServeMux, log *slog.Logger) *http.Server {
-	srv := &http.Server{Addr: ":8080", Handler: mux}
+func NewHTTPServer(lc fx.Lifecycle, cfg *config.ServerConfig, mux *http.ServeMux, log *slog.Logger) *http.Server {
+	srv := &http.Server{Addr: cfg.Port, Handler: mux}
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			ln, err := net.Listen("tcp", srv.Addr)
