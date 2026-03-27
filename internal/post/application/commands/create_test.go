@@ -42,14 +42,11 @@ func TestPostCreateSuite(t *testing.T) {
 func (s *PostCreateSuite) TestCreate() {
 	ctx := commontest.TestContext()
 
-	id, err := s.command.Handle(ctx, commands.CreatePostInput{
-		Title:  "Hello World",
-		Author: "Alice",
-	})
+	id, err := s.command.Handle(ctx, commands.CreatePostInput{Title: "Hello World", Author: "alice"})
 	require.NoError(s.T(), err)
 
 	post, err := s.repo.Get(ctx, id)
 	require.NoError(s.T(), err)
 	assert.Equal(s.T(), "Hello World", post.Title())
-	assert.Equal(s.T(), "Alice", post.Author())
+	assert.Equal(s.T(), "alice", post.Author())
 }

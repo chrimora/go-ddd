@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	commondomain "goddd/internal/common/domain"
+	commoninfrastructure "goddd/internal/common/infrastructure"
 	commonrest "goddd/internal/common/interfaces/rest"
 	"goddd/internal/post/application/commands"
 	"goddd/internal/post/application/queries"
@@ -77,7 +78,7 @@ func (r *postRoutes) get(
 
 type PostsQuery struct {
 	commonrest.PaginationQuery
-	Title string `query:"title"`
+	Title string `query:"title" maxLength:"200"`
 }
 
 func (r *postRoutes) list(
@@ -115,16 +116,20 @@ func (r *postRoutes) list(
 }
 
 type CreatePostPayload struct {
-	Title  string `json:"title"`
-	Author string `json:"author"`
+	Title string `json:"title" minLength:"1" maxLength:"200"`
 }
 
 func (r *postRoutes) create(
 	ctx context.Context, req *commonrest.CreateRequest[CreatePostPayload],
 ) (*commonrest.Response[commonrest.IdPayload], error) {
+	trace, err := commoninfrastructure.NewTraceCtxFromCtx(ctx)
+	if err != nil {
+		return nil, commonrest.UnexpectedErrorResponse(r.log, ctx, err)
+	}
+
 	id, err := r.createPost.Handle(ctx, commands.CreatePostInput{
 		Title:  req.Body.Title,
-		Author: req.Body.Author,
+		Author: trace.UserId,
 	})
 	if err != nil {
 		return nil, commonrest.UnexpectedErrorResponse(r.log, ctx, err)
@@ -133,7 +138,7 @@ func (r *postRoutes) create(
 }
 
 type UpdateTitlePayload struct {
-	Title string `json:"title"`
+	Title string `json:"title" minLength:"1" maxLength:"200"`
 }
 
 func (r *postRoutes) updateTitle(
