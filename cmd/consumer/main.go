@@ -4,7 +4,7 @@ import (
 	"goddd/internal/common"
 	"goddd/internal/config"
 	"goddd/internal/outbox"
-	"goddd/internal/user"
+	"goddd/internal/post"
 
 	"go.uber.org/fx"
 )
@@ -14,7 +14,7 @@ func main() {
 		common.ConsumerModule,
 		config.ConsumerModule,
 		outbox.ConsumerModule,
-		user.ConsumerModule,
+		post.ConsumerModule,
 		// Order important - close forwarder first
 		fx.Invoke(func(*outbox.Consumer) {}),
 		fx.Invoke(func(*outbox.DomainEventForwarder) {}),
