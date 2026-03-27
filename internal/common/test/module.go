@@ -22,12 +22,7 @@ var UnitTestModule = fx.Module(
 var IntegrationTestModule = fx.Module(
 	"test_integration",
 	fx.Supply(&config.ServiceConfig{Name: "test", Env: config.TestEnvEnum}),
-	fx.Supply(&config.DBConfig{
-		DBHost:     "localhost",
-		DBUser:     "goddd",
-		DBName:     "goddd",
-		DBPassword: "goddd",
-	}),
+	fx.Provide(config.NewConfig[config.DBConfig]),
 	common.CoreModule,
 	outbox.CoreModule,
 )
