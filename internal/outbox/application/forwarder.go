@@ -6,6 +6,7 @@ import (
 	"goddd/internal/config"
 	"goddd/internal/outbox/domain"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -21,6 +22,7 @@ type DomainEventForwarder struct {
 
 	ticker *time.Ticker
 	cancel context.CancelFunc
+	wg     sync.WaitGroup
 }
 
 func NewForwarder(
@@ -58,6 +60,8 @@ func NewForwarder(
 }
 
 func (w *DomainEventForwarder) RunPublisher(ctx context.Context) {
+	w.wg.Add(1)
+	defer w.wg.Done()
 	w.log.Info("Forwarder publisher start")
 	for {
 		select {
@@ -65,7 +69,7 @@ func (w *DomainEventForwarder) RunPublisher(ctx context.Context) {
 			w.log.Info("Forwarder publisher stopped")
 			return
 		default:
-			has_published := w.publishBatch(ctx)
+			has_published := w.publishBatch(context.Background())
 			if !has_published {
 				time.Sleep(w.cfg.PublisherSleep)
 			}
@@ -73,6 +77,8 @@ func (w *DomainEventForwarder) RunPublisher(ctx context.Context) {
 	}
 }
 func (w *DomainEventForwarder) RunWatchdog(ctx context.Context) {
+	w.wg.Add(1)
+	defer w.wg.Done()
 	w.log.Info("Forwarder watchdog start")
 	for {
 		select {
@@ -100,6 +106,7 @@ func (w *DomainEventForwarder) RunWatchdog(ctx context.Context) {
 func (w *DomainEventForwarder) Stop() {
 	w.ticker.Stop()
 	w.cancel()
+	w.wg.Wait()
 }
 
 func (w *DomainEventForwarder) publishBatch(ctx context.Context) bool {
