@@ -49,7 +49,7 @@ func (r *postRoutes) Register(api huma.API) {
 	huma.Put(api, "/posts/{id}/update-title", r.updateTitle)
 }
 
-type PostProfile struct {
+type Post struct {
 	commonrest.IdPayload
 	Title       string    `json:"title"`
 	PublishDate time.Time `json:"publishDate"`
@@ -58,7 +58,7 @@ type PostProfile struct {
 
 func (r *postRoutes) get(
 	ctx context.Context, req *commonrest.IdParam,
-) (*commonrest.Response[PostProfile], error) {
+) (*commonrest.Response[Post], error) {
 	post, err := r.getPost.Handle(ctx, queries.GetPostInput{Id: req.ID})
 	if err != nil {
 		switch {
@@ -68,7 +68,7 @@ func (r *postRoutes) get(
 			return nil, commonrest.UnexpectedErrorResponse(r.log, ctx, err)
 		}
 	}
-	res := PostProfile{}
+	res := Post{}
 	res.ID = post.ID()
 	res.Title = post.Title()
 	res.PublishDate = post.PublishDate()
@@ -83,7 +83,7 @@ type PostsQuery struct {
 
 func (r *postRoutes) list(
 	ctx context.Context, req *PostsQuery,
-) (*commonrest.Response[commonrest.Page[PostProfile]], error) {
+) (*commonrest.Response[commonrest.Page[Post]], error) {
 	var after *uuid.UUID
 	if req.AfterCursor != uuid.Nil {
 		after = &req.AfterCursor
@@ -102,16 +102,16 @@ func (r *postRoutes) list(
 		return nil, commonrest.UnexpectedErrorResponse(r.log, ctx, err)
 	}
 
-	items := make([]PostProfile, len(out.Posts))
+	items := make([]Post, len(out.Posts))
 	for i, post := range out.Posts {
-		p := PostProfile{}
+		p := Post{}
 		p.ID = post.ID()
 		p.Title = post.Title()
 		p.PublishDate = post.PublishDate()
 		p.Author = post.Author()
 		items[i] = p
 	}
-	res := commonrest.Page[PostProfile]{Items: items, NextCursor: out.Next}
+	res := commonrest.Page[Post]{Items: items, NextCursor: out.Next}
 	return commonrest.BuildResponse(res), nil
 }
 
