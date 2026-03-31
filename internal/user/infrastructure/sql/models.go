@@ -74,7 +74,14 @@ type Order struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Status    string
-	Total     int64
+}
+
+type OrderItem struct {
+	ID        uuid.UUID
+	OrderID   uuid.UUID
+	Name      string
+	Quantity  int32
+	UnitPrice int64
 }
 
 type User struct {

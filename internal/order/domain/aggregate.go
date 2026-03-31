@@ -10,51 +10,87 @@ import (
 type OrderStatus string
 
 const (
-	OrderPending   OrderStatus = "Pending"
-	OrderConfirmed OrderStatus = "Confirmed"
-	OrderCancelled OrderStatus = "Cancelled"
+	Pending   OrderStatus = "Pending"
+	Confirmed OrderStatus = "Confirmed"
+	Cancelled OrderStatus = "Cancelled"
 )
+
+type OrderItem struct {
+	id        uuid.UUID
+	name      string
+	quantity  int
+	unitPrice int64
+}
+
+func NewOrderItem(name string, quantity int, unitPrice int64) OrderItem {
+	return OrderItem{
+		id:        commondomain.NewUUID(),
+		name:      name,
+		quantity:  quantity,
+		unitPrice: unitPrice,
+	}
+}
+
+func RehydrateOrderItem(id uuid.UUID, name string, quantity int, unitPrice int64) OrderItem {
+	return OrderItem{id: id, name: name, quantity: quantity, unitPrice: unitPrice}
+}
+
+func (i OrderItem) ID() uuid.UUID    { return i.id }
+func (i OrderItem) Name() string     { return i.name }
+func (i OrderItem) Quantity() int    { return i.quantity }
+func (i OrderItem) UnitPrice() int64 { return i.unitPrice }
 
 type Order struct {
 	commondomain.AggregateRoot
 	status OrderStatus
-	total  int64
+	items  []OrderItem
 }
 
-func NewOrder(total int64) *Order {
+func NewOrder() *Order {
 	order := &Order{
 		AggregateRoot: commondomain.NewAggregateRoot(),
-		status:        OrderPending,
-		total:         total,
+		status:        Pending,
+		items:         []OrderItem{},
 	}
 	order.AddEvent(NewOrderCreatedEvent(order.ID()))
 	return order
 }
 
-func RehydrateOrder(id uuid.UUID, version int, status OrderStatus, total int64) *Order {
+func RehydrateOrder(id uuid.UUID, version int, status OrderStatus, items []OrderItem) *Order {
 	return &Order{
 		AggregateRoot: commondomain.RehydrateAggregateRoot(id, version),
 		status:        status,
-		total:         total,
-	}
-}
-
-func (o *Order) Clone() *Order {
-	return &Order{
-		AggregateRoot: o.AggregateRoot.Clone(),
-		status:        o.status,
-		total:         o.total,
+		items:         items,
 	}
 }
 
 func (o *Order) Status() OrderStatus { return o.status }
-func (o *Order) Total() int64        { return o.total }
+func (o *Order) Items() []OrderItem  { return o.items }
 func (o *Order) String() string      { return fmt.Sprintf("Order[id: %s]", o.ID()) }
 
+func (o *Order) AddItem(name string, quantity int, unitPrice int64) error {
+	if o.status != Pending {
+		return ErrOrderNotPending
+	}
+	o.items = append(o.items, NewOrderItem(name, quantity, unitPrice))
+	return nil
+}
+
 func (o *Order) Confirm() {
-	o.status = OrderConfirmed
+	o.status = Confirmed
+	o.AddEvent(NewOrderConfirmedEvent(o.ID()))
 }
 
 func (o *Order) Cancel() {
-	o.status = OrderCancelled
+	o.status = Cancelled
+}
+
+func (o *Order) Clone() *Order {
+	items := make([]OrderItem, len(o.items))
+	copy(items, o.items)
+	return &Order{
+		AggregateRoot: o.AggregateRoot.Clone(),
+		status:        o.status,
+		items:         items,
+	}
 }

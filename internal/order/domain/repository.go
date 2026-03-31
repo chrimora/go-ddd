@@ -49,40 +49,69 @@ func (r *orderRepository) Get(ctx context.Context, id uuid.UUID) (*Order, error)
 			return nil, err
 		}
 	}
-	return RehydrateOrder(row.ID, int(row.Version), OrderStatus(row.Status), row.Total), nil
+	itemRows, err := r.orderSql.GetOrderItems(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]OrderItem, len(itemRows))
+	for i, r := range itemRows {
+		items[i] = RehydrateOrderItem(r.ID, r.Name, int(r.Quantity), r.UnitPrice)
+	}
+	return RehydrateOrder(row.ID, int(row.Version), OrderStatus(row.Status), items), nil
 }
 
 func (r *orderRepository) Create(ctx context.Context, tx pgx.Tx, order *Order) error {
-	_, err := r.orderSql.WithTx(tx).CreateOrder(
-		ctx,
-		ordersql.CreateOrderParams{
-			ID:      order.ID(),
-			Version: int32(order.Version()),
-			Status:  string(order.Status()),
-			Total:   order.Total(),
-		},
-	)
+	txSql := r.orderSql.WithTx(tx)
+	_, err := txSql.CreateOrder(ctx, ordersql.CreateOrderParams{
+		ID:      order.ID(),
+		Version: int32(order.Version()),
+		Status:  string(order.Status()),
+	})
 	if err != nil {
 		return err
+	}
+	for _, item := range order.Items() {
+		err := txSql.CreateOrderItem(ctx, ordersql.CreateOrderItemParams{
+			ID:        item.ID(),
+			OrderID:   order.ID(),
+			Name:      item.Name(),
+			Quantity:  int32(item.Quantity()),
+			UnitPrice: item.UnitPrice(),
+		})
+		if err != nil {
+			return err
+		}
 	}
 	return r.outboxRepo.CreateMany(ctx, tx, order.PullEvents()...)
 }
 
 func (r *orderRepository) Update(ctx context.Context, tx pgx.Tx, order *Order) error {
-	_, err := r.orderSql.WithTx(tx).UpdateOrder(
-		ctx,
-		ordersql.UpdateOrderParams{
-			ID:      order.ID(),
-			Version: int32(order.Version()),
-			Status:  string(order.Status()),
-			Total:   order.Total(),
-		},
-	)
+	txSql := r.orderSql.WithTx(tx)
+	_, err := txSql.UpdateOrder(ctx, ordersql.UpdateOrderParams{
+		ID:      order.ID(),
+		Version: int32(order.Version()),
+		Status:  string(order.Status()),
+	})
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
 			return ErrRaceCondition(order.ID())
 		default:
+			return err
+		}
+	}
+	if err := txSql.DeleteOrderItems(ctx, order.ID()); err != nil {
+		return err
+	}
+	for _, item := range order.Items() {
+		err := txSql.CreateOrderItem(ctx, ordersql.CreateOrderItemParams{
+			ID:        item.ID(),
+			OrderID:   order.ID(),
+			Name:      item.Name(),
+			Quantity:  int32(item.Quantity()),
+			UnitPrice: item.UnitPrice(),
+		})
+		if err != nil {
 			return err
 		}
 	}

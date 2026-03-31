@@ -12,7 +12,7 @@ import (
 )
 
 const listOrders = `-- name: ListOrders :many
-SELECT id, version, created_at, updated_at, status, total
+SELECT id, version, created_at, updated_at, status
 FROM orders
 WHERE ($1::uuid IS NULL OR id > $1)
   AND ($2::text IS NULL OR status = $2)
@@ -41,7 +41,6 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]Order
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Status,
-			&i.Total,
 		); err != nil {
 			return nil, err
 		}

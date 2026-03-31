@@ -1,11 +1,14 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	commondomain "goddd/internal/common/domain"
 
 	"github.com/google/uuid"
 )
+
+var ErrOrderNotPending = errors.New("order is not pending")
 
 func ErrNotFound(id uuid.UUID) error {
 	return fmt.Errorf("%w: order %s", commondomain.ErrNotFound, id)

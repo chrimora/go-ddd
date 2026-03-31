@@ -29,3 +29,16 @@ func NewOrderCreatedEvent(aggregateId uuid.UUID) OrderCreatedEvent {
 		orderEventRoot: newOrderEventRoot(aggregateId),
 	}
 }
+
+const OrderConfirmed commondomain.EventType = "orderConfirmed"
+
+type OrderConfirmedEvent struct{ orderEventRoot }
+
+func (e OrderConfirmedEvent) GetEventType() commondomain.EventType {
+	return OrderConfirmed
+}
+func NewOrderConfirmedEvent(aggregateId uuid.UUID) OrderConfirmedEvent {
+	return OrderConfirmedEvent{
+		orderEventRoot: newOrderEventRoot(aggregateId),
+	}
+}

@@ -12,8 +12,8 @@ import (
 )
 
 const createOrder = `-- name: CreateOrder :one
-INSERT INTO orders (id, version, status, total)
-VALUES ($1, $2, $3, $4)
+INSERT INTO orders (id, version, status)
+VALUES ($1, $2, $3)
 RETURNING id
 `
 
@@ -21,23 +21,50 @@ type CreateOrderParams struct {
 	ID      uuid.UUID
 	Version int32
 	Status  string
-	Total   int64
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createOrder,
-		arg.ID,
-		arg.Version,
-		arg.Status,
-		arg.Total,
-	)
+	row := q.db.QueryRow(ctx, createOrder, arg.ID, arg.Version, arg.Status)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
+const createOrderItem = `-- name: CreateOrderItem :exec
+INSERT INTO order_items (id, order_id, name, quantity, unit_price)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type CreateOrderItemParams struct {
+	ID        uuid.UUID
+	OrderID   uuid.UUID
+	Name      string
+	Quantity  int32
+	UnitPrice int64
+}
+
+func (q *Queries) CreateOrderItem(ctx context.Context, arg CreateOrderItemParams) error {
+	_, err := q.db.Exec(ctx, createOrderItem,
+		arg.ID,
+		arg.OrderID,
+		arg.Name,
+		arg.Quantity,
+		arg.UnitPrice,
+	)
+	return err
+}
+
+const deleteOrderItems = `-- name: DeleteOrderItems :exec
+DELETE FROM order_items WHERE order_id = $1
+`
+
+func (q *Queries) DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteOrderItems, orderID)
+	return err
+}
+
 const getOrder = `-- name: GetOrder :one
-SELECT id, version, created_at, updated_at, status, total FROM orders WHERE id = $1
+SELECT id, version, created_at, updated_at, status FROM orders WHERE id = $1
 `
 
 func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (Order, error) {
@@ -49,9 +76,38 @@ func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (Order, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Status,
-		&i.Total,
 	)
 	return i, err
+}
+
+const getOrderItems = `-- name: GetOrderItems :many
+SELECT id, order_id, name, quantity, unit_price FROM order_items WHERE order_id = $1
+`
+
+func (q *Queries) GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]OrderItem, error) {
+	rows, err := q.db.Query(ctx, getOrderItems, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []OrderItem{}
+	for rows.Next() {
+		var i OrderItem
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrderID,
+			&i.Name,
+			&i.Quantity,
+			&i.UnitPrice,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const removeOrder = `-- name: RemoveOrder :exec
@@ -66,7 +122,7 @@ func (q *Queries) RemoveOrder(ctx context.Context, id uuid.UUID) error {
 
 const updateOrder = `-- name: UpdateOrder :one
 UPDATE orders
-SET version = version + 1, updated_at = NOW(), status = $3, total = $4
+SET version = version + 1, updated_at = NOW(), status = $3
 WHERE id = $1
 AND version = $2
 RETURNING id
@@ -76,16 +132,10 @@ type UpdateOrderParams struct {
 	ID      uuid.UUID
 	Version int32
 	Status  string
-	Total   int64
 }
 
 func (q *Queries) UpdateOrder(ctx context.Context, arg UpdateOrderParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, updateOrder,
-		arg.ID,
-		arg.Version,
-		arg.Status,
-		arg.Total,
-	)
+	row := q.db.QueryRow(ctx, updateOrder, arg.ID, arg.Version, arg.Status)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
