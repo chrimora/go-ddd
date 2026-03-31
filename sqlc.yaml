@@ -31,7 +31,6 @@ common_overrides: &common_overrides
 # Packages share schema to allow cross aggregate queries.
 schema_files: &schema_files
   - "./internal/outbox/infrastructure/sql/schema.sql"
-  - "./internal/post/infrastructure/sql/schema.sql"
   - "./internal/user/infrastructure/sql/schema.sql"
 
 sql:
@@ -43,15 +42,6 @@ sql:
       go:
         package: "sql"
         out: "./internal/outbox/infrastructure/sql"
-        <<: *common_overrides
-  - name: "post"
-    engine: "postgresql"
-    schema: *schema_files
-    queries: "./internal/post/infrastructure/sql/"
-    gen:
-      go:
-        package: "sql"
-        out: "./internal/post/infrastructure/sql"
         <<: *common_overrides
   - name: "user"
     engine: "postgresql"

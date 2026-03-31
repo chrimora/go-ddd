@@ -39,6 +39,8 @@ Checkout http://localhost:8080/docs
 
 ## TODO
 
+- Changes (Order + OrderItem)
+- DB Managed created_at, updated_at
 - Testcontainers
 - SQS pubsub - FIFO + MessageGroupId (AggregateId)
 
@@ -46,7 +48,7 @@ Checkout http://localhost:8080/docs
 
 ### Adding an aggregate
 
-The `post` package is an example bounded context containing a single aggregate. A bounded context can hold many aggregates — e.g. an `order` context might contain `Order`, `OrderLine`, and `Invoice` aggregates, each with their own repository, commands, queries, and events, all wired together in a shared `module.go`.
+The `user` package is an example bounded context containing a single aggregate. A bounded context can hold many aggregates — e.g. an `order` context might contain `Order`, `OrderLine`, and `Invoice` aggregates, each with their own repository, commands, queries, and events, all wired together in a shared `module.go`.
 
 To add a new aggregate (within a new or existing bounded context), create the following:
 
@@ -93,8 +95,8 @@ serially and require `task infra` to be up.
 
 Factories create and clean up test data via `t.Cleanup`:
 ```go
-post := s.pf.Mock(t, ctx)                                        // default fields
-post := s.pf.Mock(t, ctx, map[string]any{"Name": "Hello World"}) // overrides
+user := s.uf.Mock(t, ctx)                                        // default fields
+user := s.uf.Mock(t, ctx, map[string]any{"Name": "Hello World"}) // overrides
 ```
 
 ### SQL
