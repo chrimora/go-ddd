@@ -68,12 +68,10 @@ type EventOutbox struct {
 	Status        EventStatus
 }
 
-type Post struct {
-	ID          uuid.UUID
-	Version     int32
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Title       string
-	PublishDate time.Time
-	Author      string
+type User struct {
+	ID        uuid.UUID
+	Version   int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
 }

@@ -49,20 +49,16 @@ func (u *userRepository) Get(ctx context.Context, id uuid.UUID) (*User, error) {
 			return nil, err
 		}
 	}
-	return RehydrateUser(
-		user.ID, int(user.Version), user.CreatedAt, user.UpdatedAt, user.Name,
-	), nil
+	return RehydrateUser(user.ID, int(user.Version), user.Name), nil
 }
 
 func (u *userRepository) Create(ctx context.Context, tx pgx.Tx, user *User) error {
 	_, err := u.userSql.WithTx(tx).CreateUser(
 		ctx,
 		usersql.CreateUserParams{
-			ID:        user.ID(),
-			Version:   int32(user.Version()),
-			CreatedAt: user.CreatedAt(),
-			UpdatedAt: user.UpdatedAt(),
-			Name:      user.Name(),
+			ID:      user.ID(),
+			Version: int32(user.Version()),
+			Name:    user.Name(),
 		},
 	)
 	if err != nil {
@@ -75,10 +71,9 @@ func (u *userRepository) Update(ctx context.Context, tx pgx.Tx, user *User) erro
 	_, err := u.userSql.WithTx(tx).UpdateUser(
 		ctx,
 		usersql.UpdateUserParams{
-			ID:        user.ID(),
-			Version:   int32(user.Version()),
-			UpdatedAt: user.UpdatedAt(),
-			Name:      user.Name(),
+			ID:      user.ID(),
+			Version: int32(user.Version()),
+			Name:    user.Name(),
 		},
 	)
 	if err != nil {

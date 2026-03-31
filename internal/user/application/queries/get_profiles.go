@@ -59,9 +59,7 @@ func (u *getProfiles) Handle(
 
 	users := make([]domain.User, len(rows))
 	for i, row := range rows {
-		users[i] = *domain.RehydrateUser(
-			row.ID, int(row.Version), row.CreatedAt, row.UpdatedAt, row.Name,
-		)
+		users[i] = *domain.RehydrateUser(row.ID, int(row.Version), row.Name)
 	}
 	return GetProfilesOutput{Profiles: users, Next: next}, err
 }

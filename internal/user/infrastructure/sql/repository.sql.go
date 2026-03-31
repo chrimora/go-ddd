@@ -7,33 +7,24 @@ package sql
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, version, created_at, updated_at, name)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (id, version, name)
+VALUES ($1, $2, $3)
 RETURNING id
 `
 
 type CreateUserParams struct {
-	ID        uuid.UUID
-	Version   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
+	ID      uuid.UUID
+	Version int32
+	Name    string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createUser,
-		arg.ID,
-		arg.Version,
-		arg.CreatedAt,
-		arg.UpdatedAt,
-		arg.Name,
-	)
+	row := q.db.QueryRow(ctx, createUser, arg.ID, arg.Version, arg.Name)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -68,26 +59,20 @@ func (q *Queries) RemoveUser(ctx context.Context, id uuid.UUID) error {
 
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
-SET version = version + 1, updated_at = $3, name = $4 
+SET version = version + 1, updated_at = NOW(), name = $3
 WHERE id = $1
 AND version = $2
 RETURNING id
 `
 
 type UpdateUserParams struct {
-	ID        uuid.UUID
-	Version   int32
-	UpdatedAt time.Time
-	Name      string
+	ID      uuid.UUID
+	Version int32
+	Name    string
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, updateUser,
-		arg.ID,
-		arg.Version,
-		arg.UpdatedAt,
-		arg.Name,
-	)
+	row := q.db.QueryRow(ctx, updateUser, arg.ID, arg.Version, arg.Name)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err

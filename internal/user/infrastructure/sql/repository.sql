@@ -2,13 +2,13 @@
 SELECT * FROM users WHERE id = $1;
 
 -- name: CreateUser :one
-INSERT INTO users (id, version, created_at, updated_at, name)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (id, version, name)
+VALUES ($1, $2, $3)
 RETURNING id;
 
 -- name: UpdateUser :one
 UPDATE users
-SET version = version + 1, updated_at = $3, name = $4 
+SET version = version + 1, updated_at = NOW(), name = $3
 WHERE id = $1
 AND version = $2
 RETURNING id;

@@ -40,7 +40,6 @@ Checkout http://localhost:8080/docs
 ## TODO
 
 - Changes (Order + OrderItem)
-- DB Managed created_at, updated_at
 - Testcontainers
 - SQS pubsub - FIFO + MessageGroupId (AggregateId)
 

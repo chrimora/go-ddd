@@ -3,7 +3,6 @@ package domain
 import (
 	"fmt"
 	"goddd/internal/common/domain"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,12 +20,10 @@ func NewUser(name string) *User {
 	user.AddEvent(NewUserCreatedEvent(user.ID()))
 	return user
 }
-func RehydrateUser(
-	id uuid.UUID, version int, createdAt, updatedAt time.Time, name string,
-) *User {
-	root := commondomain.RehydrateAggregateRoot(id, version, createdAt, updatedAt)
+
+func RehydrateUser(id uuid.UUID, version int, name string) *User {
 	return &User{
-		AggregateRoot: root,
+		AggregateRoot: commondomain.RehydrateAggregateRoot(id, version),
 		name:          name,
 	}
 }
@@ -37,7 +34,6 @@ func (u *User) String() string { return fmt.Sprintf("User[id: %s]", u.ID()) }
 
 func (u *User) ChangeName(name string) {
 	u.name = name
-	u.AggregateRoot.Update()
 }
 
 func (u *User) Clone() *User {

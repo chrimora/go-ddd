@@ -6,7 +6,6 @@ import (
 	"goddd/internal/common/test"
 	"goddd/internal/user/domain"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -24,18 +23,16 @@ func NewUserFactory(repo domain.UserRepositoryI, txManager commondomain.TxManage
 
 func (f *userFactory) Mock(t *testing.T, ctx context.Context, overrides ...map[string]any) *domain.User {
 	fields := &struct {
-		ID        uuid.UUID
-		Version   int
-		CreatedAt time.Time
-		UpdatedAt time.Time
-		Name      string
+		ID      uuid.UUID
+		Version int
+		Name    string
 	}{
 		ID:   commondomain.NewUUID(),
 		Name: "Christopher",
 	}
 	commontest.Merge(fields, overrides)
 
-	user := domain.RehydrateUser(fields.ID, fields.Version, fields.CreatedAt, fields.UpdatedAt, fields.Name)
+	user := domain.RehydrateUser(fields.ID, fields.Version, fields.Name)
 	err := f.txManager.WithTx(ctx, func(tx pgx.Tx) error {
 		return f.repo.Create(ctx, tx, user)
 	})
