@@ -68,6 +68,15 @@ type EventOutbox struct {
 	Status        EventStatus
 }
 
+type Order struct {
+	ID        uuid.UUID
+	Version   int32
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Status    string
+	Total     int64
+}
+
 type User struct {
 	ID        uuid.UUID
 	Version   int32

@@ -32,6 +32,7 @@ common_overrides: &common_overrides
 schema_files: &schema_files
   - "./internal/outbox/infrastructure/sql/schema.sql"
   - "./internal/user/infrastructure/sql/schema.sql"
+  - "./internal/order/infrastructure/sql/schema.sql"
 
 sql:
   - name: "outbox"
@@ -42,6 +43,15 @@ sql:
       go:
         package: "sql"
         out: "./internal/outbox/infrastructure/sql"
+        <<: *common_overrides
+  - name: "order"
+    engine: "postgresql"
+    schema: *schema_files
+    queries: "./internal/order/infrastructure/sql/"
+    gen:
+      go:
+        package: "sql"
+        out: "./internal/order/infrastructure/sql"
         <<: *common_overrides
   - name: "user"
     engine: "postgresql"
