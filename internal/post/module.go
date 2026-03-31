@@ -1,14 +1,14 @@
 package post
 
 import (
-	commonapplication "goddd/internal/common/application"
-	commonrest "goddd/internal/common/interfaces/rest"
+	"goddd/internal/common/application"
+	"goddd/internal/common/interfaces/rest"
 	"goddd/internal/post/application/commands"
 	"goddd/internal/post/application/eventhandlers"
 	"goddd/internal/post/application/queries"
 	"goddd/internal/post/domain"
-	postsql "goddd/internal/post/infrastructure/sql"
-	postrest "goddd/internal/post/interfaces/rest"
+	"goddd/internal/post/infrastructure/sql"
+	"goddd/internal/post/interfaces/rest"
 
 	"go.uber.org/fx"
 )
@@ -16,8 +16,8 @@ import (
 var CoreModule = fx.Module(
 	"post_core",
 	fx.Provide(
-		postsql.NewWritePostSql,
-		postsql.NewReadPostSql,
+		sql.NewWritePostSql,
+		sql.NewReadPostSql,
 		fx.Annotate(domain.NewPostRepository, fx.As(new(domain.PostRepositoryI))),
 		queries.NewGetPostQuery,
 		queries.NewGetPostsQuery,
@@ -30,7 +30,7 @@ var APIModule = fx.Module(
 	"post_api",
 	CoreModule,
 	fx.Provide(
-		commonrest.AsRouteCollection(postrest.NewPostRoutes),
+		commonrest.AsRouteCollection(rest.NewPostRoutes),
 	),
 )
 
