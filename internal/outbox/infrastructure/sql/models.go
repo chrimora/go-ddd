@@ -67,3 +67,13 @@ type EventOutbox struct {
 	Retries       int32
 	Status        EventStatus
 }
+
+type Post struct {
+	ID          uuid.UUID
+	Version     int32
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	PublishDate time.Time
+	Author      string
+}

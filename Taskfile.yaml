@@ -10,10 +10,15 @@ tasks:
     cmds:
       - go mod tidy
 
-  infra:
+  start-infra:
     desc: Start local infra
     cmds:
       - docker compose up -d
+
+  stop-infra:
+    desc: Start local infra
+    cmds:
+      - docker compose down
 
   run-api:
     desc: Run the api locally
@@ -32,12 +37,18 @@ tasks:
     parallel: true
 
 
-  sqlgen:
+  gen-sql:
     desc: Generate sqlc pkgs
     cmds:
       # sqlc does not support yml anchors
-      - yq eval 'explode(.) | del(.common_overrides)' sqlc.yaml > .sqlc.inline.yaml
+      - yq eval 'explode(.) | del(.common_overrides) | del(.schema_files)' sqlc.yaml > .sqlc.inline.yaml
       - sqlc generate -f .sqlc.inline.yaml
+
+  gen-openapi:
+    desc: Download openapi.json from the running API
+    silent: true
+    cmds:
+      - curl -sf http://localhost:8080/openapi.json -o ./apps/outplan/openapi.json || (echo "Failed to download spec - is the API running? (task run-api)" && exit 1)
 
   migrate:
     desc: Applies DB schema from sql

@@ -28,10 +28,15 @@ common_overrides: &common_overrides
         type: "Time"
         pointer: true
 
+# Packages share schema to allow cross aggregate queries.
+schema_files: &schema_files
+  - "./internal/outbox/infrastructure/sql/schema.sql"
+  - "./internal/post/infrastructure/sql/schema.sql"
+
 sql:
   - name: "outbox"
     engine: "postgresql"
-    schema: "./internal/outbox/infrastructure/sql/schema.sql"
+    schema: *schema_files
     queries: "./internal/outbox/infrastructure/sql/"
     gen:
       go:
@@ -40,7 +45,7 @@ sql:
         <<: *common_overrides
   - name: "post"
     engine: "postgresql"
-    schema: "./internal/post/infrastructure/sql/schema.sql"
+    schema: *schema_files
     queries: "./internal/post/infrastructure/sql/"
     gen:
       go:
