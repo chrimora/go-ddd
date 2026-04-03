@@ -19,7 +19,7 @@ type OrderItem struct {
 	id        uuid.UUID
 	name      string
 	quantity  int
-	unitPrice int64
+	unitPrice int64 // pence
 }
 
 func NewOrderItem(name string, quantity int, unitPrice int64) OrderItem {
@@ -42,13 +42,15 @@ func (i OrderItem) UnitPrice() int64 { return i.unitPrice }
 
 type Order struct {
 	commondomain.AggregateRoot
+	userId uuid.UUID
 	status OrderStatus
 	items  []OrderItem
 }
 
-func NewOrder() *Order {
+func NewOrder(userId uuid.UUID) *Order {
 	order := &Order{
 		AggregateRoot: commondomain.NewAggregateRoot(),
+		userId:        userId,
 		status:        Pending,
 		items:         []OrderItem{},
 	}
@@ -56,14 +58,16 @@ func NewOrder() *Order {
 	return order
 }
 
-func RehydrateOrder(id uuid.UUID, version int, status OrderStatus, items []OrderItem) *Order {
+func RehydrateOrder(id uuid.UUID, version int, userId uuid.UUID, status OrderStatus, items []OrderItem) *Order {
 	return &Order{
 		AggregateRoot: commondomain.RehydrateAggregateRoot(id, version),
+		userId:        userId,
 		status:        status,
 		items:         items,
 	}
 }
 
+func (o *Order) UserID() uuid.UUID   { return o.userId }
 func (o *Order) Status() OrderStatus { return o.status }
 func (o *Order) Items() []OrderItem  { return o.items }
 func (o *Order) String() string      { return fmt.Sprintf("Order[id: %s]", o.ID()) }
@@ -90,6 +94,7 @@ func (o *Order) Clone() *Order {
 	copy(items, o.items)
 	return &Order{
 		AggregateRoot: o.AggregateRoot.Clone(),
+		userId:        o.userId,
 		status:        o.status,
 		items:         items,
 	}

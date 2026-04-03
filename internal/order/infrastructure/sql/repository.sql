@@ -2,8 +2,8 @@
 SELECT * FROM orders WHERE id = $1;
 
 -- name: CreateOrder :one
-INSERT INTO orders (id, version, status)
-VALUES ($1, $2, $3)
+INSERT INTO orders (id, version, user_id, status)
+VALUES ($1, $2, $3, $4)
 RETURNING id;
 
 -- name: UpdateOrder :one

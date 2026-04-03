@@ -12,19 +12,25 @@ import (
 )
 
 const createOrder = `-- name: CreateOrder :one
-INSERT INTO orders (id, version, status)
-VALUES ($1, $2, $3)
+INSERT INTO orders (id, version, user_id, status)
+VALUES ($1, $2, $3, $4)
 RETURNING id
 `
 
 type CreateOrderParams struct {
 	ID      uuid.UUID
 	Version int32
+	UserID  uuid.UUID
 	Status  string
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createOrder, arg.ID, arg.Version, arg.Status)
+	row := q.db.QueryRow(ctx, createOrder,
+		arg.ID,
+		arg.Version,
+		arg.UserID,
+		arg.Status,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -64,7 +70,7 @@ func (q *Queries) DeleteOrderItems(ctx context.Context, orderID uuid.UUID) error
 }
 
 const getOrder = `-- name: GetOrder :one
-SELECT id, version, created_at, updated_at, status FROM orders WHERE id = $1
+SELECT id, version, created_at, updated_at, user_id, status FROM orders WHERE id = $1
 `
 
 func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (Order, error) {
@@ -75,6 +81,7 @@ func (q *Queries) GetOrder(ctx context.Context, id uuid.UUID) (Order, error) {
 		&i.Version,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserID,
 		&i.Status,
 	)
 	return i, err

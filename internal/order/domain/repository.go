@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"goddd/internal/outbox"
 	ordersql "goddd/internal/order/infrastructure/sql"
+	"goddd/internal/outbox"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -57,7 +57,7 @@ func (r *orderRepository) Get(ctx context.Context, id uuid.UUID) (*Order, error)
 	for i, r := range itemRows {
 		items[i] = RehydrateOrderItem(r.ID, r.Name, int(r.Quantity), r.UnitPrice)
 	}
-	return RehydrateOrder(row.ID, int(row.Version), OrderStatus(row.Status), items), nil
+	return RehydrateOrder(row.ID, int(row.Version), row.UserID, OrderStatus(row.Status), items), nil
 }
 
 func (r *orderRepository) Create(ctx context.Context, tx pgx.Tx, order *Order) error {
@@ -65,6 +65,7 @@ func (r *orderRepository) Create(ctx context.Context, tx pgx.Tx, order *Order) e
 	_, err := txSql.CreateOrder(ctx, ordersql.CreateOrderParams{
 		ID:      order.ID(),
 		Version: int32(order.Version()),
+		UserID:  order.UserID(),
 		Status:  string(order.Status()),
 	})
 	if err != nil {
@@ -119,5 +120,6 @@ func (r *orderRepository) Update(ctx context.Context, tx pgx.Tx, order *Order) e
 }
 
 func (r *orderRepository) Remove(ctx context.Context, tx pgx.Tx, order *Order) error {
+	// Items cascade
 	return r.orderSql.WithTx(tx).RemoveOrder(ctx, order.ID())
 }
