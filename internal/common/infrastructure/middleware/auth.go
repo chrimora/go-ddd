@@ -12,7 +12,7 @@ func UserAuthMiddleware(ctx huma.Context, next func(huma.Context)) {
 	// TODO; replace this implementation
 
 	rc := commoninfrastructure.MustGetRequestCtx(ctx.Context())
-	rc.UserId = uuid.Nil.String()
+	rc.UserId = uuid.Nil
 	ctx = huma.WithValue(ctx, commoninfrastructure.RequestContextKey, rc)
 
 	next(ctx)

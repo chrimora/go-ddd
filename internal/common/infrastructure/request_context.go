@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/google/uuid"
 )
 
 type requestContextKeyType struct{}
@@ -17,14 +18,14 @@ const (
 )
 
 type RequestContext struct {
-	RequestId string `json:"request_id"`
-	UserId    string `json:"user_id"`
+	RequestId uuid.UUID `json:"request_id"`
+	UserId    uuid.UUID `json:"user_id"`
 }
 
 func MustGetRequestCtx(ctx context.Context) RequestContext {
 	rc, ok := ctx.Value(RequestContextKey).(RequestContext)
 	if !ok {
-		panic("request context not found in context — ensure middleware is configured")
+		panic("Request context not found.")
 	}
 	return rc
 }
@@ -35,8 +36,8 @@ func NewRequestCtxFromJson(data []byte) (rc RequestContext, err error) {
 
 func NewRequestCtxFromMessage(metadata message.Metadata) RequestContext {
 	return RequestContext{
-		RequestId: metadata.Get(requestIdMetaKey),
-		UserId:    metadata.Get(userIdMetaKey),
+		RequestId: uuid.MustParse(metadata.Get(requestIdMetaKey)),
+		UserId:    uuid.MustParse(metadata.Get(userIdMetaKey)),
 	}
 }
 
@@ -45,6 +46,6 @@ func (rc RequestContext) ToCtx(ctx context.Context) context.Context {
 }
 
 func (rc RequestContext) ToMessageMetadata(metadata message.Metadata) {
-	metadata.Set(requestIdMetaKey, rc.RequestId)
-	metadata.Set(userIdMetaKey, rc.UserId)
+	metadata.Set(requestIdMetaKey, rc.RequestId.String())
+	metadata.Set(userIdMetaKey, rc.UserId.String())
 }

@@ -10,8 +10,8 @@ import (
 
 func TestContext() context.Context {
 	rc := commoninfrastructure.RequestContext{
-		RequestId: commondomain.NewUUID().String(),
-		UserId:    commondomain.NewUUID().String(),
+		RequestId: commondomain.NewUUID(),
+		UserId:    commondomain.NewUUID(),
 	}
 	return rc.ToCtx(context.Background())
 }

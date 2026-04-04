@@ -8,7 +8,6 @@ import (
 	"log/slog"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/google/uuid"
 )
 
 type (
@@ -37,12 +36,8 @@ func (o *orderRoutes) create(
 	ctx context.Context, req *commonrest.CreateRequest[struct{}],
 ) (*commonrest.Response[commonrest.IdPayload], error) {
 	rc := commoninfrastructure.MustGetRequestCtx(ctx)
-	userId, err := uuid.Parse(rc.UserId)
-	if err != nil {
-		return nil, huma.Error400BadRequest("invalid user id in request context")
-	}
 
-	id, err := o.createOrder.Handle(ctx, commands.CreateOrderInput{UserId: userId})
+	id, err := o.createOrder.Handle(ctx, commands.CreateOrderInput{UserId: rc.UserId})
 	if err != nil {
 		return nil, commonrest.UnexpectedErrorResponse(o.log, ctx, err)
 	}

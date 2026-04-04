@@ -9,9 +9,9 @@ import (
 
 // Creates a request id and attaches it to the request and context
 func RequestIdMiddleware(ctx huma.Context, next func(huma.Context)) {
-	requestId := commondomain.NewUUID().String()
+	requestId := commondomain.NewUUID()
 
-	ctx.SetHeader("x-request-id", requestId)
+	ctx.SetHeader("x-request-id", requestId.String())
 	ctx = huma.WithValue(ctx, commoninfrastructure.RequestContextKey, commoninfrastructure.RequestContext{
 		RequestId: requestId,
 	})
