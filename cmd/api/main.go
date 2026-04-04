@@ -3,6 +3,7 @@ package main
 import (
 	"goddd/internal/common"
 	"goddd/internal/config"
+	"goddd/internal/order"
 	"goddd/internal/outbox"
 	"goddd/internal/user"
 	"net/http"
@@ -17,6 +18,7 @@ func main() {
 		config.APIModule,
 		outbox.APIModule,
 		user.APIModule,
+		order.APIModule,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
 }
