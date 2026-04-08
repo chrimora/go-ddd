@@ -39,7 +39,6 @@ Checkout http://localhost:8080/docs
 
 ## TODO
 
-- Changes (Order + OrderItem)
 - Testcontainers
 - SQS pubsub - FIFO + MessageGroupId (AggregateId)
 

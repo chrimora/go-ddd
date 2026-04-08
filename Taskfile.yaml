@@ -53,9 +53,9 @@ tasks:
   migrate:
     desc: Applies DB schema from sql
     deps:
-      - task: sqlgen
+      - task: gen-sql
         silent: true
-      - task: infra
+      - task: start-infra
         silent: true
     cmds:
       - atlas schema apply --env default --url "{{.DB_CONN}}"
@@ -68,7 +68,7 @@ tasks:
   test-integration:
     desc: Run integration tests
     deps:
-      - task: infra
+      - task: start-infra
         silent: true
     cmds:
       - go test --tags integration -p 1 ./... {{.CLI_ARGS}}
