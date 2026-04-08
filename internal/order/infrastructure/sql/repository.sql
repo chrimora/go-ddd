@@ -1,6 +1,16 @@
 -- name: GetOrder :one
 SELECT * FROM orders WHERE id = $1;
 
+-- name: GetOrderSummariesByUserId :many
+SELECT o.id, o.status, COALESCE(SUM(oi.unit_price * oi.quantity), 0)::bigint AS total
+FROM orders o
+LEFT JOIN order_items oi ON oi.order_id = o.id
+WHERE o.user_id = $1
+  AND (sqlc.narg(after)::uuid IS NULL OR o.id > sqlc.narg(after))
+GROUP BY o.id, o.status
+ORDER BY o.id
+LIMIT @limit_plus_one;
+
 -- name: CreateOrder :one
 INSERT INTO orders (id, version, user_id, status)
 VALUES ($1, $2, $3, $4)

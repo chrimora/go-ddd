@@ -3,11 +3,11 @@ package rest
 import (
 	"context"
 	"errors"
+	commondomain "goddd/internal/common/domain"
 	commoninfrastructure "goddd/internal/common/infrastructure"
 	commonrest "goddd/internal/common/interfaces/rest"
 	"goddd/internal/order/application/commands"
 	"goddd/internal/order/application/queries"
-	commondomain "goddd/internal/common/domain"
 	"goddd/internal/order/domain"
 	"log/slog"
 
@@ -18,9 +18,10 @@ import (
 type (
 	OrderRoutes commonrest.RouteCollection
 	orderRoutes struct {
-		log         *slog.Logger
-		createOrder commands.CreateOrderCommand
-		getOrder    queries.GetOrderQuery
+		log            *slog.Logger
+		createOrder    commands.CreateOrderCommand
+		getOrder       queries.GetOrderQuery
+		getOrdersByUser queries.GetOrdersByUserQuery
 	}
 )
 
@@ -28,17 +29,20 @@ func NewOrderRoutes(
 	log *slog.Logger,
 	createOrder commands.CreateOrderCommand,
 	getOrder queries.GetOrderQuery,
+	getOrdersByUser queries.GetOrdersByUserQuery,
 ) OrderRoutes {
 	return &orderRoutes{
-		log:         log,
-		createOrder: createOrder,
-		getOrder:    getOrder,
+		log:            log,
+		createOrder:    createOrder,
+		getOrder:       getOrder,
+		getOrdersByUser: getOrdersByUser,
 	}
 }
 
 func (o *orderRoutes) Register(api huma.API) {
 	huma.Post(api, "/orders", o.create)
 	huma.Get(api, "/orders/{id}", o.get)
+	huma.Get(api, "/orders", o.getByUser)
 }
 
 func (o *orderRoutes) create(
@@ -97,4 +101,44 @@ func (o *orderRoutes) get(
 	}
 	res.ID = order.ID()
 	return commonrest.BuildResponse(res), nil
+}
+
+type OrderSummaryPayload struct {
+	commonrest.IdPayload
+	Status string `json:"status"`
+	Total  int64  `json:"total"`
+}
+
+type ListOrdersQuery struct {
+	commonrest.PaginationQuery
+}
+
+func (o *orderRoutes) getByUser(
+	ctx context.Context, req *ListOrdersQuery,
+) (*commonrest.Response[commonrest.Page[OrderSummaryPayload]], error) {
+	rc := commoninfrastructure.MustGetRequestCtx(ctx)
+
+	var after *uuid.UUID
+	if req.AfterCursor != uuid.Nil {
+		after = &req.AfterCursor
+	}
+
+	out, err := o.getOrdersByUser.Handle(ctx, queries.GetOrdersByUserInput{
+		UserId: rc.UserId,
+		Limit:  req.Limit,
+		After:  after,
+	})
+	if err != nil {
+		return nil, commonrest.UnexpectedErrorResponse(o.log, ctx, err)
+	}
+
+	items := make([]OrderSummaryPayload, len(out.Orders))
+	for i, s := range out.Orders {
+		items[i] = OrderSummaryPayload{Status: s.Status, Total: s.Total}
+		items[i].ID = s.ID
+	}
+	return commonrest.BuildResponse(commonrest.Page[OrderSummaryPayload]{
+		Items:      items,
+		NextCursor: out.Next,
+	}), nil
 }

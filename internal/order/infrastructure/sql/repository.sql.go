@@ -117,6 +117,49 @@ func (q *Queries) GetOrderItems(ctx context.Context, orderID uuid.UUID) ([]Order
 	return items, nil
 }
 
+const getOrderSummariesByUserId = `-- name: GetOrderSummariesByUserId :many
+SELECT o.id, o.status, COALESCE(SUM(oi.unit_price * oi.quantity), 0)::bigint AS total
+FROM orders o
+LEFT JOIN order_items oi ON oi.order_id = o.id
+WHERE o.user_id = $1
+  AND ($2::uuid IS NULL OR o.id > $2)
+GROUP BY o.id, o.status
+ORDER BY o.id
+LIMIT $3
+`
+
+type GetOrderSummariesByUserIdParams struct {
+	UserID       uuid.UUID
+	After        *uuid.UUID
+	LimitPlusOne int32
+}
+
+type GetOrderSummariesByUserIdRow struct {
+	ID     uuid.UUID
+	Status string
+	Total  int64
+}
+
+func (q *Queries) GetOrderSummariesByUserId(ctx context.Context, arg GetOrderSummariesByUserIdParams) ([]GetOrderSummariesByUserIdRow, error) {
+	rows, err := q.db.Query(ctx, getOrderSummariesByUserId, arg.UserID, arg.After, arg.LimitPlusOne)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetOrderSummariesByUserIdRow{}
+	for rows.Next() {
+		var i GetOrderSummariesByUserIdRow
+		if err := rows.Scan(&i.ID, &i.Status, &i.Total); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const removeOrder = `-- name: RemoveOrder :exec
 DELETE FROM orders
 WHERE id = $1

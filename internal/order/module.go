@@ -15,9 +15,11 @@ var CoreModule = fx.Module(
 	"order_core",
 	fx.Provide(
 		sql.NewWriteOrderSql,
+		sql.NewReadOrderSql,
 		fx.Annotate(domain.NewOrderRepository, fx.As(new(domain.OrderRepositoryI))),
 		commands.NewCreateOrderCommand,
 		queries.NewGetOrderQuery,
+		queries.NewGetOrdersByUserQuery,
 	),
 )
 
