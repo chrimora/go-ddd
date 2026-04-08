@@ -3,6 +3,7 @@ package order
 import (
 	commonrest "goddd/internal/common/interfaces/rest"
 	"goddd/internal/order/application/commands"
+	"goddd/internal/order/application/queries"
 	"goddd/internal/order/domain"
 	"goddd/internal/order/infrastructure/sql"
 	"goddd/internal/order/interfaces/rest"
@@ -16,6 +17,7 @@ var CoreModule = fx.Module(
 		sql.NewWriteOrderSql,
 		fx.Annotate(domain.NewOrderRepository, fx.As(new(domain.OrderRepositoryI))),
 		commands.NewCreateOrderCommand,
+		queries.NewGetOrderQuery,
 	),
 )
 
