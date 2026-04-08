@@ -84,11 +84,3 @@ type OrderItem struct {
 	Quantity  int32
 	UnitPrice int64
 }
-
-type User struct {
-	ID        uuid.UUID
-	Version   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
-}

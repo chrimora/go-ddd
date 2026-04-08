@@ -5,7 +5,6 @@ import (
 	"goddd/internal/config"
 	"goddd/internal/order"
 	"goddd/internal/outbox"
-	"goddd/internal/user"
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -17,7 +16,6 @@ func main() {
 		common.APIModule,
 		config.APIModule,
 		outbox.APIModule,
-		user.APIModule,
 		order.APIModule,
 		fx.Invoke(func(*http.Server, *huma.API) {}),
 	).Run()
