@@ -76,6 +76,11 @@ func (o *Order) AddItem(name string, quantity int, unitPrice int64) error {
 	if o.status != Pending {
 		return ErrOrderNotPending
 	}
+	for _, item := range o.items {
+		if item.name == name {
+			return ErrDuplicateItem
+		}
+	}
 	o.items = append(o.items, NewOrderItem(name, quantity, unitPrice))
 	return nil
 }

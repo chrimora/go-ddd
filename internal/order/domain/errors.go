@@ -8,7 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrOrderNotPending = errors.New("order is not pending")
+var (
+	ErrOrderNotPending  = errors.New("order is not pending")
+	ErrDuplicateItem    = errors.New("item with that name already exists")
+)
 
 func ErrNotFound(id uuid.UUID) error {
 	return fmt.Errorf("%w: order %s", commondomain.ErrNotFound, id)

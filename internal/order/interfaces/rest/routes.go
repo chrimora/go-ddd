@@ -18,9 +18,10 @@ import (
 type (
 	OrderRoutes commonrest.RouteCollection
 	orderRoutes struct {
-		log            *slog.Logger
-		createOrder    commands.CreateOrderCommand
-		getOrder       queries.GetOrderQuery
+		log             *slog.Logger
+		createOrder     commands.CreateOrderCommand
+		addOrderItem    commands.AddOrderItemCommand
+		getOrder        queries.GetOrderQuery
 		getOrdersByUser queries.GetOrdersByUserQuery
 	}
 )
@@ -28,13 +29,15 @@ type (
 func NewOrderRoutes(
 	log *slog.Logger,
 	createOrder commands.CreateOrderCommand,
+	addOrderItem commands.AddOrderItemCommand,
 	getOrder queries.GetOrderQuery,
 	getOrdersByUser queries.GetOrdersByUserQuery,
 ) OrderRoutes {
 	return &orderRoutes{
-		log:            log,
-		createOrder:    createOrder,
-		getOrder:       getOrder,
+		log:             log,
+		createOrder:     createOrder,
+		addOrderItem:    addOrderItem,
+		getOrder:        getOrder,
 		getOrdersByUser: getOrdersByUser,
 	}
 }
@@ -43,6 +46,7 @@ func (o *orderRoutes) Register(api huma.API) {
 	huma.Post(api, "/orders", o.create)
 	huma.Get(api, "/orders/{id}", o.get)
 	huma.Get(api, "/orders", o.getByUser)
+	huma.Post(api, "/orders/{id}/items", o.addItem)
 }
 
 func (o *orderRoutes) create(
@@ -141,4 +145,32 @@ func (o *orderRoutes) getByUser(
 		Items:      items,
 		NextCursor: out.Next,
 	}), nil
+}
+
+type AddItemPayload struct {
+	Name     string `json:"name" minLength:"1"`
+	Quantity int    `json:"quantity" minimum:"1"`
+}
+
+func (o *orderRoutes) addItem(
+	ctx context.Context, req *commonrest.UpdateRequest[AddItemPayload],
+) (*commonrest.EmptyResponse, error) {
+	_, err := o.addOrderItem.Handle(ctx, commands.AddOrderItemInput{
+		OrderId:  req.ID,
+		Name:     req.Body.Name,
+		Quantity: req.Body.Quantity,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, commondomain.ErrNotFound):
+			return nil, commonrest.NotFoundResponse(o.log, ctx, err)
+		case errors.Is(err, domain.ErrOrderNotPending):
+			return nil, huma.Error409Conflict(err.Error())
+		case errors.Is(err, domain.ErrDuplicateItem):
+			return nil, huma.Error409Conflict(err.Error())
+		default:
+			return nil, commonrest.UnexpectedErrorResponse(o.log, ctx, err)
+		}
+	}
+	return &commonrest.EmptyResponse{}, nil
 }
