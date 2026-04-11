@@ -67,20 +67,3 @@ type EventOutbox struct {
 	Retries       int32
 	Status        EventStatus
 }
-
-type Order struct {
-	ID        uuid.UUID
-	Version   int32
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	UserID    uuid.UUID
-	Status    string
-}
-
-type OrderItem struct {
-	ID        uuid.UUID
-	OrderID   uuid.UUID
-	Name      string
-	Quantity  int32
-	UnitPrice int64
-}

@@ -41,7 +41,7 @@ tasks:
     desc: Generate sqlc pkgs
     cmds:
       # sqlc does not support yml anchors
-      - yq eval 'explode(.) | del(.common_overrides) | del(.schema_files)' sqlc.yaml > .sqlc.inline.yaml
+      - yq eval 'explode(.) | del(.common_overrides)' sqlc.yaml > .sqlc.inline.yaml
       - sqlc generate -f .sqlc.inline.yaml
 
   gen-openapi:
