@@ -45,10 +45,9 @@ tasks:
       - sqlc generate -f .sqlc.inline.yaml
 
   gen-openapi:
-    desc: Download openapi.json from the running API
-    silent: true
+    desc: Generate openapi.json from route definitions
     cmds:
-      - curl -sf http://localhost:8080/openapi.json -o ./apps/outplan/openapi.json || (echo "Failed to download spec - is the API running? (task run-api)" && exit 1)
+      - go run cmd/gen-openapi/main.go
 
   migrate:
     desc: Applies DB schema from sql
