@@ -29,7 +29,7 @@ A rest service + async event consumer.
 
 ## Quick start
 
-- `cp .env.dev .env`
+- `cp .env.local .env`
 - `task install`
 - `task infra`
 - `task migrate`
